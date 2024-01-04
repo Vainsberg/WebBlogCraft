@@ -1,4 +1,4 @@
-package conifg
+package viper
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
+type Сonfigurations struct {
 	DbUser string
 	DbPass string
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig() (*Сonfigurations, error) {
 	var err error
 
 	viper.SetConfigFile("config.yaml")
@@ -23,5 +23,5 @@ func NewConfig() (*Config, error) {
 	dbUser := viper.GetString("UserbymySQL")
 	dbPass := viper.GetString("PassbymySQL")
 
-	return &Config{DbUser: dbUser, DbPass: dbPass}, nil
+	return &Сonfigurations{DbUser: dbUser, DbPass: dbPass}, nil
 }

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"WebBlogCraft/internal/conifg"
 	"WebBlogCraft/internal/db"
 	"WebBlogCraft/internal/handler"
 	"WebBlogCraft/internal/repository"
+	"WebBlogCraft/internal/viper"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,9 +15,9 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	cfg, err := conifg.NewConfig()
+	cfg, err := viper.NewConfig()
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error creating config:", err.Error())
 		return
 	}
 
@@ -25,7 +25,7 @@ func main() {
 	defer db.Close()
 
 	repository := repository.NewRepositoryUsers(db)
-	handler := handler.NewHandler(*repository)
+	handler := handler.NewHandler(repository)
 
 	r.HandleFunc("/", handler.PublishHandler).Methods("GET")
 	r.HandleFunc("/getuserid", handler.SetUserIDHandler).Methods("GET")
