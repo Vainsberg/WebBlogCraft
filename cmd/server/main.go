@@ -27,8 +27,9 @@ func main() {
 	repository := repository.NewRepositoryUsers(db)
 	handler := handler.NewHandler(repository)
 
-	r.HandleFunc("/", handler.PublishHandler).Methods("GET")
+	r.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	r.HandleFunc("/getuserid", handler.SetUserIDHandler).Methods("GET")
+	r.HandleFunc("/publish", handler.PublishHandler).Methods("GET", "POST")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatal(err)
