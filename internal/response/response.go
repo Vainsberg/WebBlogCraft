@@ -1,5 +1,6 @@
 package response
 
 type Page struct {
-	Posts []string
+	Posts    []string
+	UserName []string
 }

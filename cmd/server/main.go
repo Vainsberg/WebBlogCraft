@@ -4,6 +4,7 @@ import (
 	"WebBlogCraft/internal/db"
 	"WebBlogCraft/internal/handler"
 	"WebBlogCraft/internal/repository"
+	"WebBlogCraft/internal/service"
 	"WebBlogCraft/internal/viper"
 	"fmt"
 	"log"
@@ -25,11 +26,13 @@ func main() {
 	defer db.Close()
 
 	repository := repository.NewRepositoryUsers(db)
-	handler := handler.NewHandler(repository)
-
+	service := service.NewService(repository)
+	handler := handler.NewHandler(service)
 	r.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	r.HandleFunc("/getuserid", handler.SetUserIDHandler).Methods("GET")
-	r.HandleFunc("/publish", handler.PublishHandler).Methods("GET", "POST")
+	r.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
+	r.HandleFunc("/getuserid/setname", handler.SetNameHandler).Methods("GET", "POST")
+	fmt.Println("Starting server at :8080")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatal(err)
