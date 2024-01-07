@@ -32,7 +32,7 @@ func main() {
 	}
 
 	repository := repository.NewRepositoryUsers(db)
-	service := service.NewService(repository)
+	service := service.NewService(logger, repository)
 	handler := handler.NewHandler(service, logger)
 	r.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	r.HandleFunc("/getuserid", handler.SetUserIDHandler).Methods("GET")

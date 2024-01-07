@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -9,14 +8,17 @@ import (
 	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"go.uber.org/zap"
 )
 
 type Service struct {
+	Logger          zap.Logger
 	UsersRepository *repository.RepositoryUsers
 }
 
-func NewService(UsersRepository *repository.RepositoryUsers) *Service {
+func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers) *Service {
 	return &Service{
+		Logger:          *logger,
 		UsersRepository: UsersRepository,
 	}
 }
@@ -24,7 +26,7 @@ func NewService(UsersRepository *repository.RepositoryUsers) *Service {
 func (s *Service) HtmlContent(htmltext string) string {
 	htmlContent, err := ioutil.ReadFile(htmltext)
 	if err != nil {
-		fmt.Println("Ошибка чтения HTML-файла", err)
+		s.Logger.Error("Ошибка чтения HTML-файла", zap.Error(err))
 		return ""
 	}
 	return string(htmlContent)
@@ -33,20 +35,22 @@ func (s *Service) HtmlContent(htmltext string) string {
 func (s *Service) FetchUserDataByIP(ip string) bool {
 	fetchedIP, err := s.UsersRepository.GetIpAdress(ip)
 	if err != nil {
-		fmt.Println("Error:", err)
+		s.Logger.Error("Error GetIpAdress:", zap.Error(err))
 	}
 	return ip == fetchedIP
 }
 
-func (s *Service) CreateUserIDCookie() (http.Cookie, string) {
+func (s *Service) CreateUserIDCookie(ip string) *http.Cookie {
 	userID := pkg.GenerateUserID()
-	return http.Cookie{
+	s.UsersRepository.AddUsers(userID, ip)
+	return &http.Cookie{
 		Name:    "userId",
 		Value:   userID,
 		Expires: time.Now(),
 		Path:    "/",
-	}, userID
+	}
 }
+
 func (s *Service) SetNameCookie(name string) http.Cookie {
 	return http.Cookie{
 		Name:    "userId",
@@ -56,8 +60,9 @@ func (s *Service) SetNameCookie(name string) http.Cookie {
 	}
 }
 
-func (s *Service) SetUserNameAndRepository(name string, pageVariables response.Page, ip string) {
+func (s *Service) SetUserNameAndRepository(name string, pageVariables response.Page, ip string) *http.Cookie {
 	userName := pkg.AddAndRetrieveLastUserName(name, pageVariables)
-	s.SetNameCookie(userName)
+	cookie := s.SetNameCookie(userName)
 	s.UsersRepository.GetSetName(ip, userName)
+	return &cookie
 }
