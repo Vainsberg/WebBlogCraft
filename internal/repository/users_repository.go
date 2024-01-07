@@ -34,13 +34,6 @@ func (r *RepositoryUsers) GetIpAdress(ip string) (string, error) {
 }
 
 func (r *RepositoryUsers) GetSetName(ip string, name string) error {
-	// var UserID string
-
-	// row := r.db.QueryRow("SELECT UserID FROM users_posts WHERE  UserIP = ?", ip)
-	// if err := row.Scan(&UserID); err != nil && err != sql.ErrNoRows {
-	// 	return "", nil
-	// }
-
 	stmt, err := r.db.Prepare("UPDATE users_posts SET UserID = ? WHERE UserIP = ?")
 	if err != nil {
 		log.Fatal(err)

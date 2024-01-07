@@ -1,11 +1,10 @@
 package db
 
 import (
-	"WebBlogCraft/internal/viper"
 	"database/sql"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/Vainsberg/WebBlogCraft/internal/viper"
 )
 
 func CreateOB(cfg *viper.Сonfigurations) *sql.DB {
@@ -19,7 +18,7 @@ func CreateOB(cfg *viper.Сonfigurations) *sql.DB {
 		id INT PRIMARY KEY AUTO_INCREMENT,
 		UserID TEXT,
 		UserIP TEXT,
-		Post TEXT,
+		Сontent TEXT,
 		dt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `)

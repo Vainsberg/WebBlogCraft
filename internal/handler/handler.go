@@ -1,24 +1,26 @@
 package handler
 
 import (
-	"WebBlogCraft/internal/pkg"
-	"WebBlogCraft/internal/response"
-	"WebBlogCraft/internal/service"
 	"fmt"
-	"io"
+	"html/template"
 	"net"
 	"net/http"
-	"text/template"
-	"time"
+
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"github.com/Vainsberg/WebBlogCraft/internal/service"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
-	service.Service
+	Service *service.Service
+	Logger  *zap.Logger
 }
 
-func NewHandler(service *service.Service) *Handler {
+func NewHandler(service *service.Service, logger *zap.Logger) *Handler {
 	return &Handler{
-		Service: *service,
+		Service: service,
+		Logger:  logger,
 	}
 }
 
@@ -27,44 +29,47 @@ var pageVariables response.Page
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	htmlContent := h.Service.HtmlContent("html/mainPage.html")
 	fmt.Fprint(w, htmlContent)
+	h.Logger.Info("Main page accessed")
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		h.Logger.Info("Post request to PostsHandler")
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
+			h.Logger.Error("Error getting IP address", zap.Error(err))
 			fmt.Fprintf(w, "Error getting IP address: %v", err)
 			return
+
 		}
 		fetchedIP := h.Service.FetchUserDataByIP(ip)
 
 		if !fetchedIP {
+			h.Logger.Info("User IP not found, redirecting to registration page")
 			htmlContent := h.Service.HtmlContent("html/registration_page.html")
 			fmt.Fprint(w, htmlContent)
 			return
 		}
-
-		resp, err := io.ReadAll(r.Body)
-		if err != nil {
-			fmt.Errorf("Error ReadAll:%s", err)
-		}
-
-		pageVariables = pkg.DecodingContentText(resp, pageVariables)
+		contentText := r.FormValue("postContent")
+		pageVariables = pkg.AddContentToPosts(contentText, pageVariables)
 
 		htmlContent := h.Service.HtmlContent("html/blog.html")
 
 		tmpl, err := template.New("blog").Parse(htmlContent)
 		if err != nil {
+			h.Logger.Error("Error parsing HTML content", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = tmpl.Execute(w, pageVariables)
 		if err != nil {
+			h.Logger.Error("Error executing template", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	} else {
+		h.Logger.Info("GET request to PostsHandler")
 		htmlContent := h.Service.HtmlContent("html/blog.html")
 		fmt.Fprint(w, htmlContent)
 	}
@@ -76,7 +81,6 @@ func (h *Handler) SetUserIDHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error getting IP address: %v", err)
 		return
 	}
-
 	fetchedIP := h.Service.FetchUserDataByIP(ip)
 
 	if fetchedIP {
@@ -84,16 +88,9 @@ func (h *Handler) SetUserIDHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, htmlContent)
 		return
 	}
-	userID := pkg.GenerateUserID()
-	cookie := http.Cookie{
-		Name:    "userId",
-		Value:   userID,
-		Expires: time.Now(),
-		Path:    "/",
-	}
-
+	cookie, userID := h.Service.CreateUserIDCookie()
 	http.SetCookie(w, &cookie)
-	h.UsersRepository.AddUsers(userID, string(ip))
+	h.Service.UsersRepository.AddUsers(userID, ip)
 
 	htmlContent := h.Service.HtmlContent("html/user_exists.html")
 	fmt.Fprint(w, htmlContent)
@@ -106,17 +103,9 @@ func (h *Handler) SetNameHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Error getting IP address: %v", err)
 			return
 		}
+		nameResult := r.FormValue("username")
 
-		resp, err := io.ReadAll(r.Body)
-		if err != nil {
-			fmt.Errorf("Error ReadAll:%s", err)
-		}
-
-		pageVariables = pkg.DecodingName(resp, pageVariables)
-		name := pageVariables.UserName[len(pageVariables.UserName)-1]
-		text := pkg.RemovingPreposition(name)
-
-		h.UsersRepository.GetSetName(ip, text)
+		h.Service.SetUserNameAndRepository(nameResult, pageVariables, ip)
 	} else {
 		htmlContent := h.Service.HtmlContent("html/set_name_page.html")
 		fmt.Fprint(w, htmlContent)

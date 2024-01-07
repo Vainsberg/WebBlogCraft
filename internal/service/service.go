@@ -1,9 +1,14 @@
 package service
 
 import (
-	"WebBlogCraft/internal/repository"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"time"
+
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
+	"github.com/Vainsberg/WebBlogCraft/internal/repository"
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
 )
 
 type Service struct {
@@ -31,4 +36,28 @@ func (s *Service) FetchUserDataByIP(ip string) bool {
 		fmt.Println("Error:", err)
 	}
 	return ip == fetchedIP
+}
+
+func (s *Service) CreateUserIDCookie() (http.Cookie, string) {
+	userID := pkg.GenerateUserID()
+	return http.Cookie{
+		Name:    "userId",
+		Value:   userID,
+		Expires: time.Now(),
+		Path:    "/",
+	}, userID
+}
+func (s *Service) SetNameCookie(name string) http.Cookie {
+	return http.Cookie{
+		Name:    "userId",
+		Value:   name,
+		Expires: time.Now(),
+		Path:    "/",
+	}
+}
+
+func (s *Service) SetUserNameAndRepository(name string, pageVariables response.Page, ip string) {
+	userName := pkg.AddAndRetrieveLastUserName(name, pageVariables)
+	s.SetNameCookie(userName)
+	s.UsersRepository.GetSetName(ip, userName)
 }
