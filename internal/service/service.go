@@ -1,14 +1,15 @@
 package service
 
 import (
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
-	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
@@ -32,37 +33,39 @@ func (s *Service) HtmlContent(htmltext string) string {
 	return string(htmlContent)
 }
 
-func (s *Service) FetchUserDataByIP(ip string) bool {
-	fetchedIP, err := s.UsersRepository.GetIpAdress(ip)
+func (s *Service) ParseHtml(textHtml, templateName string) *template.Template {
+	tmpl, err := template.New(templateName).Parse(s.HtmlContent(textHtml))
 	if err != nil {
-		s.Logger.Error("Error GetIpAdress:", zap.Error(err))
+		s.Logger.Error("Error parsing HTML content", zap.Error(err))
+		return nil
 	}
-	return ip == fetchedIP
+	return tmpl
 }
 
-func (s *Service) CreateUserIDCookie(ip string) *http.Cookie {
-	userID := pkg.GenerateUserID()
-	s.UsersRepository.AddUsers(userID, ip)
+func (s *Service) CreateSessionCookie(userName string) *http.Cookie {
+	sessionToken := uuid.NewString()
+	expiresAt := time.Now().Add(24 * time.Hour)
+	s.UsersRepository.AddSessionCookie(sessionToken, userName, expiresAt)
+
 	return &http.Cookie{
-		Name:    "userId",
-		Value:   userID,
-		Expires: time.Now(),
-		Path:    "/",
+		Name:    "session_token",
+		Value:   sessionToken,
+		Expires: expiresAt,
 	}
 }
 
-func (s *Service) SetNameCookie(name string) http.Cookie {
-	return http.Cookie{
-		Name:    "userId",
-		Value:   name,
-		Expires: time.Now(),
-		Path:    "/",
+func (s *Service) AddUserWithHashedPassword(userName, userPassword string) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), 8)
+	if err != nil {
+		s.Logger.Error("Error GenerateFromPassword:", zap.Error(err))
 	}
+	s.UsersRepository.AddPasswordAndUserName(userName, string(hashedPassword))
 }
 
-func (s *Service) SetUserNameAndRepository(name string, pageVariables response.Page, ip string) *http.Cookie {
-	userName := pkg.AddAndRetrieveLastUserName(name, pageVariables)
-	cookie := s.SetNameCookie(userName)
-	s.UsersRepository.GetSetName(ip, userName)
-	return &cookie
+func (s *Service) SearchPassword(userName string) string {
+	serchPassword, err := s.UsersRepository.SearchPasswordAndUserName(userName)
+	if err != nil {
+		s.Logger.Error("Error SearchPasswordAndUserName:", zap.Error(err))
+	}
+	return serchPassword
 }

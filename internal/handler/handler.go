@@ -2,14 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"html/template"
-	"net"
 	"net/http"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Handler struct {
@@ -27,80 +26,76 @@ func NewHandler(service *service.Service, logger *zap.Logger) *Handler {
 var pageVariables response.Page
 
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, h.Service.HtmlContent("html/mainPage.html"))
 	h.Logger.Info("Main page accessed")
+	c, err := r.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			fmt.Fprint(w, h.Service.HtmlContent("html/sessioncookie.html"))
+			return
+		}
+		h.Logger.Error("Error:", zap.Error(err))
+	}
+	fmt.Fprint(w, h.Service.HtmlContent("html/mainPage.html"))
+
+	if !h.Service.UsersRepository.SearchSessionCookie(c.Value) {
+		fmt.Fprint(w, h.Service.HtmlContent("html/sessioncookie.html"))
+		return
+	}
+	if !h.Service.UsersRepository.CheckingTimeforCookie(c.Value) {
+		h.Service.UsersRepository.DeleteSessionCookie(c.Value)
+		fmt.Fprint(w, h.Service.HtmlContent("html/sessionexpiration.html"))
+		return
+	}
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		h.Logger.Info("Post request to PostsHandler")
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			h.Logger.Error("Error getting IP address", zap.Error(err))
-			fmt.Fprintf(w, "Error getting IP address: %v", err)
-			return
-
-		}
-		fetchedIP := h.Service.FetchUserDataByIP(ip)
-
-		if !fetchedIP {
-			h.Logger.Info("User IP not found, redirecting to registration page")
-			fmt.Fprint(w, h.Service.HtmlContent("html/registration_page.html"))
-			return
-		}
-
+		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
 
-		tmpl, err := template.New("blog").Parse(h.Service.HtmlContent("html/blog.html"))
-		if err != nil {
-			h.Logger.Error("Error parsing HTML content", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = tmpl.Execute(w, pkg.AddContentToPosts(contentText, pageVariables))
+		tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
+		err := tmpl.Execute(w, pkg.AddContentToPosts(contentText, pageVariables))
 		if err != nil {
 			h.Logger.Error("Error executing template", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		return
+	}
 
-	} else {
-		h.Logger.Info("GET request to PostsHandler")
-		fmt.Fprint(w, h.Service.HtmlContent("html/blog.html"))
+	h.Logger.Info("GET request to PostsHandler")
+	tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		panic(err)
 	}
 }
 
-func (h *Handler) SetUserIDHandler(w http.ResponseWriter, r *http.Request) {
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		h.Logger.Error("Error getting IP address:", zap.Error(err))
-		fmt.Fprintf(w, "Error getting IP address: %v", err)
-		return
-	}
-	fetchedIP := h.Service.FetchUserDataByIP(ip)
+func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		userName := r.FormValue("username")
+		userPassword := r.FormValue("password")
+		h.Service.AddUserWithHashedPassword(userName, userPassword)
 
-	if fetchedIP {
 		fmt.Fprint(w, h.Service.HtmlContent("html/registration_confirmation_page.html"))
 		return
 	}
-
-	http.SetCookie(w, h.Service.CreateUserIDCookie(ip))
-	fmt.Fprint(w, h.Service.HtmlContent("html/user_exists.html"))
+	fmt.Fprint(w, h.Service.HtmlContent("html/singup.html"))
 }
 
-func (h *Handler) SetNameHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SinginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			h.Logger.Error("Error getting IP address:", zap.Error(err))
-			fmt.Fprintf(w, "Error getting IP address: %v", err)
+		userName := r.FormValue("username")
+		userPassword := r.FormValue("password")
+		searchPassword := h.Service.SearchPassword(userName)
+
+		if err := bcrypt.CompareHashAndPassword([]byte(searchPassword), []byte(userPassword)); err != nil {
+			fmt.Fprint(w, h.Service.HtmlContent("html/singinwrong.html"))
 			return
 		}
-		nameResult := r.FormValue("username")
-		http.SetCookie(w, h.Service.SetUserNameAndRepository(nameResult, pageVariables, ip))
-
-	} else {
-		fmt.Fprint(w, h.Service.HtmlContent("html/set_name_page.html"))
+		fmt.Fprint(w, h.Service.HtmlContent("html/authorization.html"))
+		http.SetCookie(w, h.Service.CreateSessionCookie(userName))
+		return
 	}
+	fmt.Fprint(w, h.Service.HtmlContent("html/singin.html"))
 }

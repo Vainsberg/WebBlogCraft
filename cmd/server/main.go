@@ -2,22 +2,21 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 
+	config "github.com/Vainsberg/WebBlogCraft/internal/config"
 	"github.com/Vainsberg/WebBlogCraft/internal/db"
 	"github.com/Vainsberg/WebBlogCraft/internal/handler"
+	httpserver "github.com/Vainsberg/WebBlogCraft/internal/httpServer"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
-	"github.com/Vainsberg/WebBlogCraft/internal/viper"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 func main() {
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 
-	cfg, err := viper.NewConfig()
+	cfg, err := config.NewConfig()
 	if err != nil {
 		fmt.Println("Error creating config:", err.Error())
 		return
@@ -34,20 +33,11 @@ func main() {
 	repository := repository.NewRepositoryUsers(db)
 	service := service.NewService(logger, repository)
 	handler := handler.NewHandler(service, logger)
-	r.HandleFunc("/", handler.MainPageHandler).Methods("GET")
-	r.HandleFunc("/getuserid", handler.SetUserIDHandler).Methods("GET")
-	r.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
-	r.HandleFunc("/getuserid/setname", handler.SetNameHandler).Methods("GET", "POST")
-	fmt.Println("Starting server at :8080")
+	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
+	router.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
+	router.HandleFunc("/singup", handler.SignupHandler).Methods("GET", "POST")
+	router.HandleFunc("/singin", handler.SinginHandler).Methods("GET", "POST")
+	fmt.Println("Starting server at", cfg.Addr)
 
-	server := http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
-
-	err = server.ListenAndServe()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	httpserver.NewHttpServer(router)
 }

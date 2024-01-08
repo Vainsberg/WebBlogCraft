@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -25,32 +25,53 @@ func (r *RepositoryUsers) AddUsers(Userid, Userip string) error {
 	return nil
 }
 
-func (r *RepositoryUsers) GetIpAdress(ip string) (string, error) {
-	var userIP string
-
-	row := r.db.QueryRow("SELECT UserIP FROM users_posts WHERE UserIP = ?", ip)
-	if err := row.Scan(&userIP); err != nil && err != sql.ErrNoRows {
-		return "", err
-	}
-	return userIP, nil
-}
-
-func (r *RepositoryUsers) GetSetName(ip, name string) error {
-	stmt, err := r.db.Prepare("UPDATE users_posts SET UserID = ? WHERE UserIP = ?")
+func (r *RepositoryUsers) AddPasswordAndUserName(userName, password string) error {
+	_, err := r.db.Exec("INSERT INTO users (UserName,UserPassword,dt) VALUES(?,?,CURRENT_TIMESTAMP())", userName, password)
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(name, ip)
-	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return err
 	}
 	return nil
 }
 
-func (r *RepositoryUsers) AddContent(content, ip string) error {
-	_, err := r.db.Exec("INSERT INTO users_posts (Content, UserIP) VALUES (?, ?) ON DUPLICATE KEY UPDATE Content = ?", content, ip, content)
+func (r *RepositoryUsers) SearchPasswordAndUserName(userName string) (string, error) {
+	var UserPassword string
+	row := r.db.QueryRow("SELECT UserPassword FROM users WHERE UserName = ?", userName)
+	if err := row.Scan(&UserPassword); err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+	return UserPassword, nil
+}
+
+func (r *RepositoryUsers) AddSessionCookie(session_token string, userName string, time time.Time) error {
+	_, err := r.db.Exec("INSERT INTO sessions (Session_id,UserName,Expiry) VALUES(?,?,?);", session_token, userName, time)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (r *RepositoryUsers) SearchSessionCookie(session_token string) bool {
+	var searchSessionToken string
+	row := r.db.QueryRow("SELECT Session_id FROM sessions WHERE Session_id = ?;", session_token)
+	if err := row.Scan(&searchSessionToken); err != nil && err != sql.ErrNoRows {
+		return false
+	}
+	return true
+}
+
+func (r *RepositoryUsers) CheckingTimeforCookie(session_token string) bool {
+	var timeCookie time.Time
+	row := r.db.QueryRow("SELECT Expiry FROM sessions WHERE Session_id = ?;", session_token)
+	if err := row.Scan(&timeCookie); err != nil && err != sql.ErrNoRows {
+		return false
+	}
+	return time.Now().After(timeCookie)
+}
+
+func (r *RepositoryUsers) DeleteSessionCookie(session_token string) error {
+	_, err := r.db.Exec("DELETE FROM sessions WHERE Session_id = ?;", session_token)
 	if err != nil {
 		fmt.Println(err)
 		return err

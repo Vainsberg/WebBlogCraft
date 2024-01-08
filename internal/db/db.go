@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/Vainsberg/WebBlogCraft/internal/viper"
+	config "github.com/Vainsberg/WebBlogCraft/internal/config"
 )
 
-func CreateOB(cfg *viper.Сonfigurations) *sql.DB {
-	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(127.0.0.1:3306)/user_posts_db")
+func CreateOB(cfg *config.Сonfigurations) *sql.DB {
+	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(172.17.0.2:3306)/user_posts_db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -16,8 +16,7 @@ func CreateOB(cfg *viper.Сonfigurations) *sql.DB {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS users_posts (
 		id INT PRIMARY KEY AUTO_INCREMENT,
-		UserID TEXT,
-		UserIP TEXT,
+		UserName TEXT,
 		Сontent TEXT,
 		dt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
@@ -25,5 +24,30 @@ func CreateOB(cfg *viper.Сonfigurations) *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS users (
+		id INT PRIMARY KEY AUTO_INCREMENT,
+		UserName VARCHAR(255),
+		UserPassword TEXT,
+		dt DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS sessions (
+		Session_id VARCHAR(40) PRIMARY KEY,
+		UserName VARCHAR(255) NOT NULL,
+		Expiry TIMESTAMP NOT NULL
+	);
+`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return db
 }
