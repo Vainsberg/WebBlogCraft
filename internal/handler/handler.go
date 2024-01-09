@@ -30,22 +30,22 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			fmt.Fprint(w, h.Service.HtmlContent("html/sessioncookie.html"))
+			fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 			return
 		}
 		h.Logger.Error("Error:", zap.Error(err))
 	}
-	fmt.Fprint(w, h.Service.HtmlContent("html/mainPage.html"))
 
 	if !h.Service.UsersRepository.SearchSessionCookie(c.Value) {
-		fmt.Fprint(w, h.Service.HtmlContent("html/sessioncookie.html"))
+		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 		return
 	}
 	if !h.Service.UsersRepository.CheckingTimeforCookie(c.Value) {
 		h.Service.UsersRepository.DeleteSessionCookie(c.Value)
-		fmt.Fprint(w, h.Service.HtmlContent("html/sessionexpiration.html"))
+		fmt.Fprint(w, h.Service.HtmlContent("html/session_expiration.html"))
 		return
 	}
+	fmt.Fprint(w, h.Service.HtmlContent("html/main_page.html"))
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,11 +90,11 @@ func (h *Handler) SinginHandler(w http.ResponseWriter, r *http.Request) {
 		searchPassword := h.Service.SearchPassword(userName)
 
 		if err := bcrypt.CompareHashAndPassword([]byte(searchPassword), []byte(userPassword)); err != nil {
-			fmt.Fprint(w, h.Service.HtmlContent("html/singinwrong.html"))
+			fmt.Fprint(w, h.Service.HtmlContent("html/singin_wrong.html"))
 			return
 		}
-		fmt.Fprint(w, h.Service.HtmlContent("html/authorization.html"))
 		http.SetCookie(w, h.Service.CreateSessionCookie(userName))
+		fmt.Fprint(w, h.Service.HtmlContent("html/authorization.html"))
 		return
 	}
 	fmt.Fprint(w, h.Service.HtmlContent("html/singin.html"))

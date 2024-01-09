@@ -16,6 +16,7 @@
         </form>
         <h3>Лента постов:</h3>
         <ul>
+          {{if .Posts}}
             {{range .Posts}}
 			<li>{{.}}</li>
 			   {{end}}

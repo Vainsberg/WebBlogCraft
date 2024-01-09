@@ -8,7 +8,7 @@ import (
 )
 
 func CreateOB(cfg *config.Сonfigurations) *sql.DB {
-	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(172.17.0.2:3306)/user_posts_db")
+	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp("+cfg.DbIp+":"+cfg.DbPort+")/user_posts_db")
 	if err != nil {
 		log.Fatal(err)
 	}
