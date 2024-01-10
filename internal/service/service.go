@@ -13,13 +13,13 @@ import (
 )
 
 type Service struct {
-	Logger          zap.Logger
+	Logger          *zap.Logger
 	UsersRepository *repository.RepositoryUsers
 }
 
 func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers) *Service {
 	return &Service{
-		Logger:          *logger,
+		Logger:          logger,
 		UsersRepository: UsersRepository,
 	}
 }

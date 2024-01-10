@@ -1,5 +1,5 @@
 UserbymySQL: 'root'
 PassbymySQL: '1111'
 Address: ':8080'
-PortSQL: '3306'
-IpSQL: '127.0.0.1'
+DbPort: '3306'
+DbHost: '127.0.0.1'
