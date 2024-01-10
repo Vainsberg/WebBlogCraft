@@ -30,7 +30,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
+		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 			return
 		}
 		h.Logger.Error("Error:", zap.Error(err))

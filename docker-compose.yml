@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: "1111"
+      MYSQL_DATABASE: "user_posts_db"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "1111"
+    ports:
+      - "3306:3306"

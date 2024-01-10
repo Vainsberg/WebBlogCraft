@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html>
-    <head>
-       <title>BLOG Content</title>
-    </head>
-    <body>
-        <center>
-            <h2>BlOG Content</h2>
-        </center>
-        <form action="/posts" method="post">
-        <label>Введите ваш пост:</label>
+<head>
+    <title>BLOG Content</title>
+</head>
+<body>
+    <center>
+        <h2>BlOG Content</h2>
+    </center>
+    <form action="/posts" method="post">
+        <label for="postContent">Введите ваш пост:</label>
         <br>
         <textarea id="postContent" name="postContent" rows="4"></textarea>
         <br>
         <input type="submit" value="Отправить">
-        </form>
-        <h3>Лента постов:</h3>
+    </form>
+    <h3>Лента постов:</h3>
+    {{if .Posts}}
         <ul>
-          {{if .Posts}}
             {{range .Posts}}
-			<li>{{.}}</li>
-			   {{end}}
+                <li>{{.}}</li>
+            {{end}}
         </ul>
-    </body>
+    {{else}}
+        <p>Нет доступных постов.</p>
+    {{end}}
+</body>
 </html>
