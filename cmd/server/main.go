@@ -30,13 +30,16 @@ func main() {
 		panic("Error create logger")
 	}
 
-	repository := repository.NewRepositoryUsers(db)
-	service := service.NewService(logger, repository)
+	repositoryUsers := repository.NewRepositoryUsers(db)
+	repositorySessions := repository.NewRepositorySessions(db)
+	repositoryPosts := repository.NewRepositoryPosts(db)
+	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(service, logger)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	router.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
 	router.HandleFunc("/singup", handler.SignupHandler).Methods("GET", "POST")
-	router.HandleFunc("/singin", handler.SinginHandler).Methods("GET", "POST")
+	router.HandleFunc("/singin", handler.SigninHandler).Methods("GET", "POST")
+	router.HandleFunc("/posts/viewing", handler.ViewingPostsHandler).Methods("GET", "POST")
 	fmt.Println("Starting server at", cfg.Addr)
 
 	httpserver.NewHttpServer(router)

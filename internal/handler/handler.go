@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -28,20 +29,17 @@ var pageVariables response.Page
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("Main page accessed")
 	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
-			return
-		}
+	if errors.Is(err, http.ErrNoCookie) {
 		h.Logger.Error("Error:", zap.Error(err))
+		return
 	}
 
-	if !h.Service.UsersRepository.SearchSessionCookie(c.Value) {
+	if !h.Service.SessionsRepository.SearchSessionCookie(c.Value) {
 		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 		return
 	}
-	if !h.Service.UsersRepository.CheckingTimeforCookie(c.Value) {
-		h.Service.UsersRepository.DeleteSessionCookie(c.Value)
+	if !h.Service.SessionsRepository.CheckingTimeforCookie(c.Value) {
+		h.Service.SessionsRepository.DeleteSessionCookie(c.Value)
 		fmt.Fprint(w, h.Service.HtmlContent("html/session_expiration.html"))
 		return
 	}
@@ -52,9 +50,17 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
+		c, err := r.Cookie("session_token")
+		if errors.Is(err, http.ErrNoCookie) {
+			h.Logger.Error("Error:", zap.Error(err))
+			return
+		}
+
+		h.Service.PublishPostWithSessionUser(c.Value, contentText)
 
 		tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
-		err := tmpl.Execute(w, pkg.AddContentToPosts(contentText, pageVariables))
+		pageVariables = pkg.AddContentToPosts(contentText, pageVariables)
+		err = tmpl.Execute(w, pageVariables)
 		if err != nil {
 			h.Logger.Error("Error executing template", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -65,9 +71,9 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("GET request to PostsHandler")
 	tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
-	err := tmpl.Execute(w, nil)
+	err := tmpl.Execute(w, pageVariables)
 	if err != nil {
-		panic(err)
+		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}
 }
 
@@ -75,27 +81,44 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		userName := r.FormValue("username")
 		userPassword := r.FormValue("password")
-		h.Service.AddUserWithHashedPassword(userName, userPassword)
 
-		fmt.Fprint(w, h.Service.HtmlContent("html/registration_confirmation_page.html"))
+		searchName, err := h.Service.UsersRepository.CheckingPresenceUser(userName)
+		if err != nil {
+			h.Logger.Error("CheckingPresenceUser error: ", zap.Error(err))
+		}
+
+		if searchName != userName {
+			h.Service.AddUserWithHashedPassword(userName, userPassword)
+			fmt.Fprint(w, h.Service.HtmlContent("html/registration_confirmation_page.html"))
+			return
+		}
+		fmt.Fprint(w, h.Service.HtmlContent("html/signup_wrong.html"))
 		return
 	}
-	fmt.Fprint(w, h.Service.HtmlContent("html/singup.html"))
+	fmt.Fprint(w, h.Service.HtmlContent("html/signup.html"))
 }
 
-func (h *Handler) SinginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		userName := r.FormValue("username")
 		userPassword := r.FormValue("password")
 		searchPassword := h.Service.SearchPassword(userName)
 
 		if err := bcrypt.CompareHashAndPassword([]byte(searchPassword), []byte(userPassword)); err != nil {
-			fmt.Fprint(w, h.Service.HtmlContent("html/singin_wrong.html"))
+			fmt.Fprint(w, h.Service.HtmlContent("html/signin_wrong.html"))
 			return
 		}
 		http.SetCookie(w, h.Service.CreateSessionCookie(userName))
 		fmt.Fprint(w, h.Service.HtmlContent("html/authorization.html"))
 		return
 	}
-	fmt.Fprint(w, h.Service.HtmlContent("html/singin.html"))
+	fmt.Fprint(w, h.Service.HtmlContent("html/signin.html"))
+}
+
+func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := h.Service.ParseHtml("html/viewing_posts.html", "viewing_posts")
+	err := tmpl.Execute(w, pageVariables)
+	if err != nil {
+		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+	}
 }

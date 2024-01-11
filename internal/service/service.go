@@ -13,14 +13,18 @@ import (
 )
 
 type Service struct {
-	Logger          *zap.Logger
-	UsersRepository *repository.RepositoryUsers
+	Logger             *zap.Logger
+	UsersRepository    *repository.RepositoryUsers
+	SessionsRepository *repository.RepositorySessions
+	PostsRepository    *repository.RepositoryPosts
 }
 
-func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers) *Service {
+func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts) *Service {
 	return &Service{
-		Logger:          logger,
-		UsersRepository: UsersRepository,
+		Logger:             logger,
+		UsersRepository:    UsersRepository,
+		SessionsRepository: SessionsRepository,
+		PostsRepository:    PostsRepository,
 	}
 }
 
@@ -45,7 +49,7 @@ func (s *Service) ParseHtml(textHtml, templateName string) *template.Template {
 func (s *Service) CreateSessionCookie(userName string) *http.Cookie {
 	sessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(24 * time.Hour)
-	s.UsersRepository.AddSessionCookie(sessionToken, userName, expiresAt)
+	s.SessionsRepository.AddSessionCookie(sessionToken, userName, expiresAt)
 
 	return &http.Cookie{
 		Name:    "session_token",
@@ -68,4 +72,15 @@ func (s *Service) SearchPassword(userName string) string {
 		s.Logger.Error("Error SearchPasswordAndUserName:", zap.Error(err))
 	}
 	return serchPassword
+}
+
+func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
+	searchUserName, err := s.SessionsRepository.SearchUserNameSessionCookie(sessionToken)
+	if err != nil {
+		s.Logger.Error("SearchUserNameSessionCookie error: ", zap.Error(err))
+	}
+	err = s.PostsRepository.AddContentAndUserName(searchUserName, content)
+	if err != nil {
+		s.Logger.Error("AddContentAndUserName error: ", zap.Error(err))
+	}
 }
