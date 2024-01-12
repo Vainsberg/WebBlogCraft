@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
+	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -17,14 +20,16 @@ type Service struct {
 	UsersRepository    *repository.RepositoryUsers
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
+	ClientRedis        *redis.RedisClient
 }
 
-func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts) *Service {
+func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts, ClientRedis *redis.RedisClient) *Service {
 	return &Service{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
+		ClientRedis:        ClientRedis,
 	}
 }
 
@@ -83,4 +88,23 @@ func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
 	if err != nil {
 		s.Logger.Error("AddContentAndUserName error: ", zap.Error(err))
 	}
+}
+
+func (s *Service) AddContentToPosts(content string, Posts response.StoragePosts) response.StoragePosts {
+	var pageValiable response.Page
+	pageValiable.ID = pkg.GenerateUserID()
+	pageValiable.Posts = content
+	Posts.PostsID = append(Posts.PostsID, pageValiable.ID)
+	Posts.Posts = append(Posts.Posts, content)
+
+	if len(Posts.Posts) > 10 {
+		lastPostID := s.ClientRedis.SearchLastPostID(Posts)
+		s.ClientRedis.DeleteFromCache(redis.CacheClient, lastPostID)
+	}
+
+	err := s.ClientRedis.AddToCache(pageValiable.ID, pageValiable.Posts, 0)
+	if err != nil {
+		s.Logger.Error("RedisClient.Set error: ", zap.Error(err))
+	}
+	return Posts
 }

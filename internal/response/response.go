@@ -1,5 +1,11 @@
 package response
 
 type Page struct {
-	Posts []string
+	ID    string
+	Posts string
+}
+
+type StoragePosts struct {
+	PostsID []string
+	Posts   []string
 }

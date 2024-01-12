@@ -7,6 +7,7 @@ import (
 	"github.com/Vainsberg/WebBlogCraft/internal/db"
 	"github.com/Vainsberg/WebBlogCraft/internal/handler"
 	httpserver "github.com/Vainsberg/WebBlogCraft/internal/httpServer"
+	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"github.com/gorilla/mux"
@@ -24,6 +25,7 @@ func main() {
 
 	db := db.CreateOB(cfg)
 	defer db.Close()
+	redisClient := redis.NewRedisClient()
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -33,7 +35,8 @@ func main() {
 	repositoryUsers := repository.NewRepositoryUsers(db)
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
-	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts)
+	repositoryRedis := redis.NewRepositoryRedis(redisClient)
+	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis)
 	handler := handler.NewHandler(service, logger)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	router.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")

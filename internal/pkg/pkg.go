@@ -10,6 +10,8 @@ func GenerateUserID() string {
 }
 
 func AddContentToPosts(content string, pageValiable response.Page) response.Page {
-	pageValiable.Posts = append(pageValiable.Posts, content)
+	pageValiable.ID = GenerateUserID()
+	pageValiable.Posts = content
+
 	return pageValiable
 }

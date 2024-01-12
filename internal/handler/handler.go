@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"go.uber.org/zap"
@@ -24,7 +23,7 @@ func NewHandler(service *service.Service, logger *zap.Logger) *Handler {
 	}
 }
 
-var pageVariables response.Page
+var Posts response.StoragePosts
 
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("Main page accessed")
@@ -38,7 +37,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 		return
 	}
-	if !h.Service.SessionsRepository.CheckingTimeforCookie(c.Value) {
+	if h.Service.SessionsRepository.CheckingTimeforCookie(c.Value) {
 		h.Service.SessionsRepository.DeleteSessionCookie(c.Value)
 		fmt.Fprint(w, h.Service.HtmlContent("html/session_expiration.html"))
 		return
@@ -47,6 +46,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
@@ -55,12 +55,13 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("Error:", zap.Error(err))
 			return
 		}
-
 		h.Service.PublishPostWithSessionUser(c.Value, contentText)
 
 		tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
-		pageVariables = pkg.AddContentToPosts(contentText, pageVariables)
-		err = tmpl.Execute(w, pageVariables)
+
+		Posts = h.Service.AddContentToPosts(contentText, Posts)
+
+		err = tmpl.Execute(w, Posts)
 		if err != nil {
 			h.Logger.Error("Error executing template", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -71,7 +72,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("GET request to PostsHandler")
 	tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
-	err := tmpl.Execute(w, pageVariables)
+	err := tmpl.Execute(w, Posts)
 	if err != nil {
 		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}
@@ -102,6 +103,11 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		userName := r.FormValue("username")
 		userPassword := r.FormValue("password")
+
+		if h.Service.SessionsRepository.SearchAccountInSessions(userName) {
+			fmt.Fprint(w, h.Service.HtmlContent("html/signin_error.html"))
+			return
+		}
 		searchPassword := h.Service.SearchPassword(userName)
 
 		if err := bcrypt.CompareHashAndPassword([]byte(searchPassword), []byte(userPassword)); err != nil {
@@ -117,7 +123,7 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := h.Service.ParseHtml("html/viewing_posts.html", "viewing_posts")
-	err := tmpl.Execute(w, pageVariables)
+	err := tmpl.Execute(w, Posts)
 	if err != nil {
 		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}
