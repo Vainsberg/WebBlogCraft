@@ -23,13 +23,13 @@ func (s *RepositorySessions) AddSessionCookie(session_token string, userName str
 	return nil
 }
 
-func (s *RepositorySessions) SearchSessionCookie(session_token string) bool {
+func (s *RepositorySessions) SearchSessionCookie(session_token string) string {
 	var searchSessionToken string
 	row := s.db.QueryRow("SELECT Session_id FROM sessions WHERE Session_id = ?;", session_token)
 	if err := row.Scan(&searchSessionToken); err != nil && err != sql.ErrNoRows {
-		return false
+		return ""
 	}
-	return true
+	return searchSessionToken
 }
 
 func (s *RepositorySessions) CheckingTimeforCookie(session_token string) bool {
@@ -59,13 +59,13 @@ func (s *RepositorySessions) SearchUserNameSessionCookie(session_token string) (
 	return searchUserName, nil
 }
 
-func (s *RepositorySessions) SearchAccountInSessions(username string) bool {
+func (s *RepositorySessions) SearchAccountInSessions(username string) string {
 	var searchUserName string
 	row := s.db.QueryRow("SELECT UserName FROM sessions WHERE UserName = ?;", username)
 	if err := row.Scan(&searchUserName); err != nil && err != sql.ErrNoRows {
-		return false
+		return ""
 	}
-	return true
+	return searchUserName
 }
 
 func (r *RepositorySessions) DeleteSessionCookieAccount(userName string) error {

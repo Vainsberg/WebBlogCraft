@@ -33,7 +33,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.Service.SessionsRepository.SearchSessionCookie(c.Value) {
+	if h.Service.SessionsRepository.SearchSessionCookie(c.Value) == "" {
 		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 		return
 	}
@@ -46,7 +46,6 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
@@ -104,7 +103,7 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 		userName := r.FormValue("username")
 		userPassword := r.FormValue("password")
 
-		if h.Service.SessionsRepository.SearchAccountInSessions(userName) {
+		if h.Service.SessionsRepository.SearchAccountInSessions(userName) != "" {
 			fmt.Fprint(w, h.Service.HtmlContent("html/signin_error.html"))
 			return
 		}

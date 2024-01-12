@@ -91,10 +91,10 @@ func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
 }
 
 func (s *Service) AddContentToPosts(content string, Posts response.StoragePosts) response.StoragePosts {
-	var pageValiable response.Page
-	pageValiable.ID = pkg.GenerateUserID()
-	pageValiable.Posts = content
-	Posts.PostsID = append(Posts.PostsID, pageValiable.ID)
+
+	postID := pkg.GenerateUserID()
+	post := content
+	Posts.PostsID = append(Posts.PostsID, postID)
 	Posts.Posts = append(Posts.Posts, content)
 
 	if len(Posts.Posts) > 10 {
@@ -102,7 +102,7 @@ func (s *Service) AddContentToPosts(content string, Posts response.StoragePosts)
 		s.ClientRedis.DeleteFromCache(redis.CacheClient, lastPostID)
 	}
 
-	err := s.ClientRedis.AddToCache(pageValiable.ID, pageValiable.Posts, 0)
+	err := s.ClientRedis.AddToCache(postID, post, 0)
 	if err != nil {
 		s.Logger.Error("RedisClient.Set error: ", zap.Error(err))
 	}
