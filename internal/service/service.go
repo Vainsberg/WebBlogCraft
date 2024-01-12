@@ -91,7 +91,6 @@ func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
 }
 
 func (s *Service) AddContentToPosts(content string, Posts response.StoragePosts) response.StoragePosts {
-
 	postID := pkg.GenerateUserID()
 	post := content
 	Posts.PostsID = append(Posts.PostsID, postID)
