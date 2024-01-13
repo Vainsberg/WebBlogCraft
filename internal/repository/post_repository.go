@@ -3,6 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
 )
 
 type RepositoryPosts struct {
@@ -20,4 +23,24 @@ func (p *RepositoryPosts) AddContentAndUserName(username, content string) error 
 		return err
 	}
 	return nil
+}
+
+func (p *RepositoryPosts) ContentOutput() response.Posts {
+	rows, err := p.db.Query("SELECT Content FROM users_posts;")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	Posts := response.Posts{}
+	for rows.Next() {
+		var item string
+		err := rows.Scan(&item)
+		if err != nil {
+			log.Fatal(err)
+		}
+		Posts.Posts = append(Posts.Posts, item)
+	}
+	return Posts
+
 }

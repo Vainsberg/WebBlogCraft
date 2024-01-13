@@ -9,3 +9,7 @@ type StoragePosts struct {
 	PostsID []string
 	Posts   []string
 }
+
+type Posts struct {
+	Posts []string
+}

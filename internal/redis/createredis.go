@@ -1,19 +1,21 @@
 package redis
 
 import (
+	config "github.com/Vainsberg/WebBlogCraft/internal/config"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 )
 
-func NewRedisClient() *redis.Client {
+func NewRedisClient(cfg *config.Сonfigurations) *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPass,
+		DB:       cfg.RedisDb,
 	})
 }
-
-var CacheClient = cache.New(&cache.Options{
-	Redis:      NewRedisClient(),
-	LocalCache: cache.NewTinyLFU(10, 0),
-})
+func CreateRedisCache(cfg *config.Сonfigurations) *cache.Cache {
+	return cache.New(&cache.Options{
+		Redis:      NewRedisClient(cfg),
+		LocalCache: cache.NewTinyLFU(10, 0),
+	})
+}

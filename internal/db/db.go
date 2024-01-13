@@ -17,7 +17,7 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 	CREATE TABLE IF NOT EXISTS users_posts (
 		id INT PRIMARY KEY AUTO_INCREMENT,
 		UserName TEXT,
-		Сontent TEXT,
+		Content TEXT,
 		dt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `)

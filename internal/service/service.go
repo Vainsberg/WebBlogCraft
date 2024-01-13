@@ -10,6 +10,7 @@ import (
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"github.com/go-redis/cache/v8"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -21,15 +22,17 @@ type Service struct {
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 	ClientRedis        *redis.RedisClient
+	cache              *cache.Cache
 }
 
-func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts, ClientRedis *redis.RedisClient) *Service {
+func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts, ClientRedis *redis.RedisClient, cache *cache.Cache) *Service {
 	return &Service{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
 		ClientRedis:        ClientRedis,
+		cache:              cache,
 	}
 }
 
@@ -90,20 +93,20 @@ func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
 	}
 }
 
-func (s *Service) AddContentToPosts(content string, Posts response.StoragePosts) response.StoragePosts {
+func (s *Service) AddContentToPosts(content string) {
+	var Posts response.StoragePosts
 	postID := pkg.GenerateUserID()
-	post := content
 	Posts.PostsID = append(Posts.PostsID, postID)
 	Posts.Posts = append(Posts.Posts, content)
 
 	if len(Posts.Posts) > 10 {
 		lastPostID := s.ClientRedis.SearchLastPostID(Posts)
-		s.ClientRedis.DeleteFromCache(redis.CacheClient, lastPostID)
+		s.ClientRedis.DeleteFromCache(s.cache, lastPostID)
 	}
 
-	err := s.ClientRedis.AddToCache(postID, post, 0)
+	err := s.ClientRedis.AddToCache(postID, content, 0)
 	if err != nil {
 		s.Logger.Error("RedisClient.Set error: ", zap.Error(err))
 	}
-	return Posts
+
 }

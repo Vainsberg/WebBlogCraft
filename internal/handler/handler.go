@@ -12,24 +12,22 @@ import (
 )
 
 type Handler struct {
-	Service *service.Service
 	Logger  *zap.Logger
+	Service *service.Service
 }
 
-func NewHandler(service *service.Service, logger *zap.Logger) *Handler {
+func NewHandler(logger *zap.Logger, service *service.Service) *Handler {
 	return &Handler{
-		Service: service,
 		Logger:  logger,
+		Service: service,
 	}
 }
-
-var Posts response.StoragePosts
 
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("Main page accessed")
 	c, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
-		h.Logger.Error("Error:", zap.Error(err))
+		fmt.Fprint(w, h.Service.HtmlContent("html/session_cookie.html"))
 		return
 	}
 
@@ -46,6 +44,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
+	var outputContent response.Posts
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
@@ -58,9 +57,11 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 		tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
 
-		Posts = h.Service.AddContentToPosts(contentText, Posts)
+		h.Service.AddContentToPosts(contentText)
 
-		err = tmpl.Execute(w, Posts)
+		outputContent = h.Service.PostsRepository.ContentOutput()
+
+		err = tmpl.Execute(w, outputContent)
 		if err != nil {
 			h.Logger.Error("Error executing template", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -71,7 +72,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("GET request to PostsHandler")
 	tmpl := h.Service.ParseHtml("html/blog.tmpl", "blog")
-	err := tmpl.Execute(w, Posts)
+	err := tmpl.Execute(w, outputContent)
 	if err != nil {
 		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}

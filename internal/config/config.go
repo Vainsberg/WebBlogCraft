@@ -5,11 +5,14 @@ import (
 )
 
 type Сonfigurations struct {
-	DbUser string `yaml:"UserbymySQL" env:"UserbymySQL" env-default:"root"`
-	DbPass string `yaml:"PassbymySQL" env:"PassbymySQL" env-default:""`
-	Addr   string `yaml:"Address" env:"Address" env-default:"8080"`
-	DbIp   string `yaml:"DbHost" env:"DbHost" env-default:"127.0.0.1"`
-	DbPort string `yaml:"DbPort" env:"DbPort" env-default:"3306"`
+	DbUser    string `yaml:"UserbymySQL" env:"UserbymySQL" env-default:"root"`
+	DbPass    string `yaml:"PassbymySQL" env:"PassbymySQL" env-default:""`
+	Addr      string `yaml:"Address" env:"Address" env-default:"8080"`
+	DbIp      string `yaml:"DbHost" env:"DbHost" env-default:"127.0.0.1"`
+	DbPort    string `yaml:"DbPort" env:"DbPort" env-default:"3306"`
+	RedisAddr string `yaml:"RedisAddr" env:"RedisAddr" env-default:"localhost:6379"`
+	RedisPass string `yaml:"RedisPass" env:"RedisPass" env-default:""`
+	RedisDb   int    `yaml:"RedisDb" env:"RedisDb" env-default: "0"`
 }
 
 func NewConfig() (*Сonfigurations, error) {

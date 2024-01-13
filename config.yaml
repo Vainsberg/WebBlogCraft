@@ -3,3 +3,7 @@ PassbymySQL: '1111'
 Address: ':8080'
 DbPort: '3306'
 DbHost: '127.0.0.1'
+RedisAddr: 'localhost:6379'
+RedisPass: ''
+RedisDb: 0
+

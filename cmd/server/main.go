@@ -25,7 +25,8 @@ func main() {
 
 	db := db.CreateOB(cfg)
 	defer db.Close()
-	redisClient := redis.NewRedisClient()
+	redisClient := redis.NewRedisClient(cfg)
+	cache := redis.CreateRedisCache(cfg)
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -36,8 +37,8 @@ func main() {
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis)
-	handler := handler.NewHandler(service, logger)
+	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache)
+	handler := handler.NewHandler(logger, service)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	router.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
 	router.HandleFunc("/singup", handler.SignupHandler).Methods("GET", "POST")
