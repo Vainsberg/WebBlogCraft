@@ -1,7 +1,8 @@
 package pkg
 
 import (
-	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"math"
+
 	"github.com/google/uuid"
 )
 
@@ -9,9 +10,6 @@ func GenerateUserID() string {
 	return uuid.New().String()
 }
 
-func AddContentToPosts(content string, pageValiable response.Page) response.Page {
-	pageValiable.ID = GenerateUserID()
-	pageValiable.Posts = content
-
-	return pageValiable
+func FormatInt(num float64) int {
+	return int(math.Ceil(num))
 }

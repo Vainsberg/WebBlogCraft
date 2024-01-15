@@ -14,34 +14,36 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 	}
 
 	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS users_posts (
-		id INT PRIMARY KEY AUTO_INCREMENT,
-		UserName TEXT,
-		Content TEXT,
-		dt DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS users (
-		id INT PRIMARY KEY AUTO_INCREMENT,
-		UserName VARCHAR(255),
-		UserPassword TEXT,
-		dt DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS sessions (
-		Session_id VARCHAR(40) PRIMARY KEY,
+	CREATE TABLE IF NOT EXISTS Users (
+		Id INT PRIMARY KEY AUTO_INCREMENT,
 		UserName VARCHAR(255) NOT NULL,
-		Expiry TIMESTAMP NOT NULL
+		UserPassword VARCHAR(255),
+		DtCreate DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Users_posts (
+		Id INT PRIMARY KEY AUTO_INCREMENT,
+		Users_id INT NOT NULL,
+		Content VARCHAR(255),
+		DtCreate DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (Users_id) REFERENCES Users(Id)
+	);
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Sessions (
+		Session_id VARCHAR(40) PRIMARY KEY,
+		Users_id INT NOT NULL,
+		Expiry TIMESTAMP NOT NULL,
+		FOREIGN KEY (Users_id) REFERENCES Users(Id)
 	);
 `)
 

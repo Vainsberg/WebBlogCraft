@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
@@ -22,17 +23,25 @@ type Service struct {
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 	ClientRedis        *redis.RedisClient
-	cache              *cache.Cache
+	Cache              *cache.Cache
+	PostsRedis         response.StoragePostsRedis
 }
 
-func NewService(logger *zap.Logger, UsersRepository *repository.RepositoryUsers, SessionsRepository *repository.RepositorySessions, PostsRepository *repository.RepositoryPosts, ClientRedis *redis.RedisClient, cache *cache.Cache) *Service {
+func NewService(logger *zap.Logger,
+	UsersRepository *repository.RepositoryUsers,
+	SessionsRepository *repository.RepositorySessions,
+	PostsRepository *repository.RepositoryPosts,
+	ClientRedis *redis.RedisClient,
+	cache *cache.Cache,
+	PostsRedis response.StoragePostsRedis) *Service {
 	return &Service{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
 		ClientRedis:        ClientRedis,
-		cache:              cache,
+		Cache:              cache,
+		PostsRedis:         PostsRedis,
 	}
 }
 
@@ -82,31 +91,75 @@ func (s *Service) SearchPassword(userName string) string {
 	return serchPassword
 }
 
-func (s *Service) PublishPostWithSessionUser(sessionToken, content string) {
-	searchUserName, err := s.SessionsRepository.SearchUserNameSessionCookie(sessionToken)
-	if err != nil {
-		s.Logger.Error("SearchUserNameSessionCookie error: ", zap.Error(err))
-	}
-	err = s.PostsRepository.AddContentAndUserName(searchUserName, content)
+func (s *Service) PublishPostWithSessionUser(searchUserName, content string) {
+	err := s.PostsRepository.AddContentAndUserName(searchUserName, content)
 	if err != nil {
 		s.Logger.Error("AddContentAndUserName error: ", zap.Error(err))
 	}
 }
 
 func (s *Service) AddContentToPosts(content string) {
-	var Posts response.StoragePosts
 	postID := pkg.GenerateUserID()
-	Posts.PostsID = append(Posts.PostsID, postID)
-	Posts.Posts = append(Posts.Posts, content)
+	s.PostsRedis.PostsID = append(s.PostsRedis.PostsID, postID)
+	s.PostsRedis.Content = append(s.PostsRedis.Content, content)
 
-	if len(Posts.Posts) > 10 {
-		lastPostID := s.ClientRedis.SearchLastPostID(Posts)
-		s.ClientRedis.DeleteFromCache(s.cache, lastPostID)
+	if len(s.PostsRedis.Content) > 10 {
+		lastPostID := s.ClientRedis.SearchLastPostID(s.PostsRedis)
+		s.ClientRedis.DeleteFromCache(s.Cache, lastPostID)
 	}
 
 	err := s.ClientRedis.AddToCache(postID, content, 0)
 	if err != nil {
 		s.Logger.Error("RedisClient.Set error: ", zap.Error(err))
 	}
+}
 
+func (s *Service) ParsePageAndCalculateOffset(pageStr string) (int, int) {
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		s.Logger.Error("Invalid page parameter", zap.Error(err))
+		return 0, 0
+	}
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	offset := (page - 1) * 10
+	return page, offset
+}
+
+func (s *Service) CheckUserExistence(userName string) string {
+	searchName, err := s.UsersRepository.CheckingPresenceUser(userName)
+	if err != nil {
+		s.Logger.Error("CheckingPresenceUser error: ", zap.Error(err))
+	}
+	return searchName
+}
+
+func (s *Service) SearchCountPage(page int) response.PageData {
+	var PageData response.PageData
+	var count float64
+
+	sumPosts, err := s.PostsRepository.CountPosts()
+	if err != nil {
+		s.Logger.Error("CountPosts error: ", zap.Error(err))
+	}
+	count = sumPosts / 10.0
+	countInt := pkg.FormatInt(count)
+
+	PageData.TotalPages = countInt
+	PageData.CurrentPage = page
+	return PageData
+}
+
+func (s *Service) CreateTemplateData(page, offset int) response.TemplateData {
+	countPage := s.SearchCountPage(page)
+	offsetPosts := s.PostsRepository.CalculatePageOffset(offset)
+
+	data := response.TemplateData{
+		Posts:      offsetPosts,
+		Pagination: countPage,
+	}
+
+	return data
 }

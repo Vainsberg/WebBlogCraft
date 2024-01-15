@@ -7,18 +7,28 @@
     <center>
         <h2>BlOG Content</h2>
     </center>
-      <br>
+    <br>
     <center>
-    <h3>Лента постов:</h3>
-   </center>
+        <h3>Лента постов:</h3>
+    </center>
     {{if .Posts}}
-        <ul>
-            {{range .Posts}}
-                <li>{{.}}</li>
-            {{end}}
-        </ul>
+    <ul>
+        {{range .Posts}}
+            <li>{{.Content}}</li>
+        {{end}}
+    </ul>
     {{else}}
         <p>Нет доступных постов.</p>
     {{end}}
+    <br>
+    <ul>
+        <li>
+            {{if eq .Pagination.TotalPages .Pagination.CurrentPage}}
+                <span>{{.Pagination.TotalPages}}</span> 
+            {{else}}
+                <a href="http://localhost:8080/posts/viewing?page={{.Pagination.TotalPages}}">{{.Pagination.TotalPages}}</a> 
+            {{end}}
+        </li>
+    </ul>    
 </body>
 </html>

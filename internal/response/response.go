@@ -1,15 +1,20 @@
 package response
 
-type Page struct {
-	ID    string
-	Posts string
-}
-
-type StoragePosts struct {
+type StoragePostsRedis struct {
 	PostsID []string
-	Posts   []string
+	Content []string
 }
 
 type Posts struct {
-	Posts []string
+	Content []string
+}
+
+type PageData struct {
+	CurrentPage int
+	TotalPages  int
+}
+
+type TemplateData struct {
+	Posts      []Posts
+	Pagination PageData
 }

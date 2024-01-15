@@ -7,14 +7,10 @@
     <center>
         <h2>BlOG Content</h2>
     </center>
-    <form action="/posts" method="post">
-        <label for="postContent">Введите ваш пост:</label>
-        <br>
-        <textarea id="postContent" name="postContent" rows="4"></textarea>
-        <br>
-        <input type="submit" value="Отправить">
-    </form>
+      <br>
+    <center>
     <h3>Лента постов:</h3>
+   </center>
     {{if .Content}}
         <ul>
             {{range .Content}}

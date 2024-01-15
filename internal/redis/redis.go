@@ -17,9 +17,13 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 	return &RedisClient{Client: client}
 }
 
-func (r *RedisClient) SearchLastPostID(posts response.StoragePosts) string {
+func (r *RedisClient) SearchLastPostID(posts response.StoragePostsRedis) string {
+	if len(posts.PostsID) == 0 || len(posts.Content) == 0 {
+		return ""
+	}
+
 	postid := posts.PostsID[len(posts.PostsID)-1]
-	posts.Posts = posts.Posts[:len(posts.Posts)-1]
+	posts.Content = posts.Content[:len(posts.Content)-1]
 	posts.PostsID = posts.PostsID[:len(posts.PostsID)-1]
 	return postid
 }
