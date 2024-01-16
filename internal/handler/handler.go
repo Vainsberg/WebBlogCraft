@@ -103,7 +103,6 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprint(w, h.PostService.HtmlContent("html/signup_wrong.html"))
 		return
-
 	}
 	fmt.Fprint(w, h.PostService.HtmlContent("html/signup.html"))
 }
@@ -134,11 +133,12 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
-	h.PostService.AddContentToPosts()
+
 	page, offset := h.PostService.ParsePageAndCalculateOffset(pageStr)
 	if page == 1 {
+		contentRedis := h.PostService.AddContentToPosts()
 		tmpl := h.PostService.ParseHtml("html/viewing_posts_redis.html", "viewing_posts_redis")
-		err := tmpl.Execute(w, h.PostService.PostsRedis)
+		err := tmpl.Execute(w, contentRedis)
 		if err != nil {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}

@@ -58,19 +58,17 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 
 	var posts []response.Posts
 	for rows.Next() {
-		var contentBytes []byte
-		err := rows.Scan(&contentBytes)
+		var content string
+		err := rows.Scan(&content)
 		if err != nil {
 			return nil
 		}
-		content := string(contentBytes)
 
 		contentSlice := strings.Fields(content)
 
 		post := response.Posts{Content: contentSlice}
 		posts = append(posts, post)
 	}
-
 	return posts
 }
 
@@ -93,7 +91,7 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
 
 	var posts []response.PostsRedis
 
-	if rows.Next() {
+	for rows.Next() {
 		var content string
 		err := rows.Scan(&content)
 		if err != nil {
@@ -104,8 +102,10 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
 
 		post := response.PostsRedis{Content: contentSlice}
 		posts = append(posts, post)
+	}
 
+	if err := rows.Err(); err != nil {
+		return []response.PostsRedis{}, err
 	}
 	return posts, nil
-
 }

@@ -20,7 +20,6 @@ type PostService struct {
 	PostsRepository    *repository.RepositoryPosts
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
-	PostsRedis         []response.PostsRedis
 }
 
 func NewPostService(logger *zap.Logger,
@@ -28,8 +27,7 @@ func NewPostService(logger *zap.Logger,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts,
 	ClientRedis *redis.RedisClient,
-	cache *cache.Cache,
-	PostsRedis []response.PostsRedis) *PostService {
+	cache *cache.Cache) *PostService {
 	return &PostService{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
@@ -37,7 +35,6 @@ func NewPostService(logger *zap.Logger,
 		PostsRepository:    PostsRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
-		PostsRedis:         PostsRedis,
 	}
 }
 
@@ -66,7 +63,7 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId, content strin
 	}
 }
 
-func (post *PostService) AddContentToPosts() {
+func (post *PostService) AddContentToPosts() []response.PostsRedis {
 	err := post.ClientRedis.ClearRedisCache()
 	if err != nil {
 		post.Logger.Error("ClearRedisCache error: ", zap.Error(err))
@@ -81,7 +78,7 @@ func (post *PostService) AddContentToPosts() {
 	if err != nil {
 		post.Logger.Error("AddToCache error: ", zap.Error(err))
 	}
-
+	return searchContent
 }
 
 func (post *PostService) SearchCountPage(page int) response.PageData {

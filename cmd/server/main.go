@@ -9,7 +9,6 @@ import (
 	httpserver "github.com/Vainsberg/WebBlogCraft/internal/httpServer"
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
-	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -33,13 +32,12 @@ func main() {
 	if err != nil {
 		panic("Error create logger")
 	}
-	postsRedis := []response.PostsRedis{}
 
 	repositoryUsers := repository.NewRepositoryUsers(db)
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache, postsRedis)
+	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache)
 	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
