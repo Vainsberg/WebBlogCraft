@@ -2,10 +2,11 @@ package redis
 
 import (
 	"context"
-	"time"
+	"encoding/json"
+	"log"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
-	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -17,23 +18,25 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 	return &RedisClient{Client: client}
 }
 
-func (r *RedisClient) SearchLastPostID(posts response.StoragePostsRedis) string {
-	if len(posts.PostsID) == 0 || len(posts.Content) == 0 {
-		return ""
+func (r *RedisClient) AddToCache(searchContent []response.PostsRedis) error {
+	for _, v := range searchContent {
+
+		jsonContent, err := json.Marshal(v.Content)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = r.Client.Set(context.Background(), pkg.GenerateUserID(), jsonContent, 0).Err()
+		if err != nil {
+			return err
+		}
 	}
-
-	postid := posts.PostsID[len(posts.PostsID)-1]
-	posts.Content = posts.Content[:len(posts.Content)-1]
-	posts.PostsID = posts.PostsID[:len(posts.PostsID)-1]
-	return postid
+	return nil
 }
 
-func (r *RedisClient) DeleteFromCache(c *cache.Cache, key string) error {
-	return r.Client.Del(context.Background(), key).Err()
-}
-
-func (r *RedisClient) AddToCache(key string, value string, expiration time.Duration) error {
-	err := r.Client.Set(context.Background(), key, value, expiration).Err()
+func (r *RedisClient) ClearRedisCache() error {
+	ctx := context.Background()
+	err := r.Client.FlushAll(ctx).Err()
 	if err != nil {
 		return err
 	}

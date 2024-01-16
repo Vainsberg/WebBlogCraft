@@ -11,14 +11,16 @@
     <center>
     <h3>Лента постов:</h3>
    </center>
-    {{if .Content}}
-        <ul>
-            {{range .Content}}
-                <li>{{.}}</li>
-            {{end}}
-        </ul>
-    {{else}}
-        <p>Нет доступных постов.</p>
-    {{end}}
+   {{if .}}
+   <ul>
+       {{range .}}
+           {{range .Content}}
+               <li>{{.}}</li>
+           {{end}}
+       {{end}}
+   </ul>
+{{else}}
+   <p>Нет доступных постов.</p>
+{{end}}
 </body>
 </html>

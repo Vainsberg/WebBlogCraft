@@ -56,17 +56,17 @@ func (r *RepositorySessions) DeleteSessionCookie(session_token string) error {
 	return nil
 }
 
-func (s *RepositorySessions) SearchUserNameSessionCookie(session_token string) (string, error) {
-	var searchUserName string
+func (s *RepositorySessions) SearchUsersIdSessionCookie(session_token string) (string, error) {
+	var searcUsersId string
 
 	row := s.db.QueryRow(`SELECT Sessions.Users_Id 
 	FROM Sessions
 	JOIN Users ON Sessions.Users_id = Users_Id
 	WHERE Sessions.Session_id = ? `, session_token)
-	if err := row.Scan(&searchUserName); err != nil && err != sql.ErrNoRows {
+	if err := row.Scan(&searcUsersId); err != nil && err != sql.ErrNoRows {
 		return "", err
 	}
-	return searchUserName, nil
+	return searcUsersId, nil
 }
 
 func (s *RepositorySessions) SearchAccountInSessions(username string) string {
@@ -87,11 +87,9 @@ func (s *RepositorySessions) SearchAccountInSessions(username string) string {
 }
 
 func (r *RepositorySessions) DeleteSessionCookieAccount(userName string) error {
-	query := `DELETE FROM Sessions
-          JOIN Users ON Sessions.Users_id = Users_Id
-		  WHERE Users.UsersName = ?`
-
-	_, err := r.db.Exec(query, userName)
+	_, err := r.db.Exec(`DELETE FROM Sessions
+	JOIN Users ON Sessions.Users_id = Users_Id
+	WHERE Users.UsersName = ?`, userName)
 	if err != nil {
 		fmt.Println(err)
 		return err

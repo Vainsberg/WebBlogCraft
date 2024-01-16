@@ -26,7 +26,7 @@
             {{if eq .Pagination.TotalPages .Pagination.CurrentPage}}
                 <span>{{.Pagination.TotalPages}}</span> 
             {{else}}
-                <a href="http://localhost:8080/posts/viewing?page={{.Pagination.TotalPages}}">{{.Pagination.TotalPages}}</a> 
+                <a href="/posts/list?page={{.Pagination.TotalPages}}">{{.Pagination.TotalPages}}</a> 
             {{end}}
         </li>
     </ul>    

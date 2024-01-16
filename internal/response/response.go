@@ -1,11 +1,9 @@
 package response
 
-type StoragePostsRedis struct {
-	PostsID []string
+type Posts struct {
 	Content []string
 }
-
-type Posts struct {
+type PostsRedis struct {
 	Content []string
 }
 

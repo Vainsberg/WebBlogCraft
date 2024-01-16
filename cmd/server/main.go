@@ -33,19 +33,20 @@ func main() {
 	if err != nil {
 		panic("Error create logger")
 	}
-	postsStorage := response.StoragePostsRedis{}
+	postsRedis := []response.PostsRedis{}
 
 	repositoryUsers := repository.NewRepositoryUsers(db)
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	service := service.NewService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache, postsStorage)
-	handler := handler.NewHandler(logger, service)
+	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache, postsRedis)
+	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
+	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
-	router.HandleFunc("/posts", handler.PostsHandler).Methods("GET", "POST")
-	router.HandleFunc("/singup", handler.SignupHandler).Methods("GET", "POST")
-	router.HandleFunc("/singin", handler.SigninHandler).Methods("GET", "POST")
-	router.HandleFunc("/posts/viewing", handler.ViewingPostsHandler).Methods("GET", "POST")
+	router.HandleFunc("/posts/add", handler.PostsHandler).Methods("GET", "POST")
+	router.HandleFunc("/signup", handler.SignupHandler).Methods("GET", "POST")
+	router.HandleFunc("/signin", handler.SigninHandler).Methods("GET", "POST")
+	router.HandleFunc("/posts/list", handler.ViewingPostsHandler).Methods("GET", "POST")
 	fmt.Println("Starting server at", cfg.Addr)
 
 	httpserver.NewHttpServer(router)
