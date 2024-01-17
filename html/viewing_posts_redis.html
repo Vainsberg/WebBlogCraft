@@ -11,16 +11,25 @@
     <center>
     <h3>Лента постов:</h3>
    </center>
-   {{if .}}
-   <ul>
-       {{range .}}
-           {{range .Content}}
-               <li>{{.}}</li>
-           {{end}}
-       {{end}}
-   </ul>
+   {{if .Content}}
+    <ul>
+        {{range .Content}}
+            <li>{{.}}</li>
+        {{end}}
+    </ul>
 {{else}}
-   <p>Нет доступных постов.</p>
+    <p>Нет доступных постов.</p>
 {{end}}
+<ul>
+    <li>
+        {{range .Template.Pagination.TotalPages}}
+        {{if eq  $.Template.Pagination.CurrentPage . }}
+            {{.}}
+        {{else}}
+            <a href="/posts/list?page={{.}}">{{.}}</a>
+        {{end}}
+    {{end}}
+     </li> 
+</ul>
 </body>
 </html>

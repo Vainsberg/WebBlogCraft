@@ -20,15 +20,16 @@
     {{else}}
         <p>Нет доступных постов.</p>
     {{end}}
-    <br>
     <ul>
-        <li>
-            {{if eq .Pagination.TotalPages .Pagination.CurrentPage}}
-                <span>{{.Pagination.TotalPages}}</span> 
-            {{else}}
-                <a href="/posts/list?page={{.Pagination.TotalPages}}">{{.Pagination.TotalPages}}</a> 
-            {{end}}
-        </li>
+         <li>
+            {{range .Pagination.TotalPages}}
+                 {{if eq $.Pagination.CurrentPage . }}
+                     {{.}}
+                 {{else}}
+                     <a href="/posts/list?page={{.}}">{{.}}</a>
+                {{end}}
+             {{end}}
+          </li> 
     </ul>    
 </body>
 </html>

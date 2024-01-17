@@ -7,7 +7,7 @@
     <center>
         <h2>BlOG Content</h2>
     </center>
-    <form action="/posts/add" method="post">
+    <form action="/posts/add?page=1" method="post">
         <label for="postContent">Введите ваш пост:</label>
         <br>
         <textarea id="postContent" name="postContent" rows="4"></textarea>
@@ -15,14 +15,21 @@
         <input type="submit" value="Отправить">
     </form>
     <h3>Лента постов:</h3>
-    {{if .Content}}
-        <ul>
-            {{range .Content}}
-                <li>{{.}}</li>
-            {{end}}
-        </ul>
-    {{else}}
-        <p>Нет доступных постов.</p>
-    {{end}}
+  {{if .}}
+   <ul>
+       {{range .}}
+           {{range .Content}}
+               <li>{{.}}</li>
+           {{end}}
+       {{end}}
+   </ul>
+ {{else}}
+   <p>Нет доступных постов.</p>
+{{end}} 
+<br>
+<center>
+    <a href="/">Перейти на главную страницу</a>
+</center>
+
 </body>
 </html>

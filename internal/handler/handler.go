@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -36,7 +35,10 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
-	var outputContent response.Posts
+	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
+	if err != nil {
+		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
+	}
 
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
@@ -64,25 +66,22 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 		h.PostService.PublishPostWithSessionUser(searchUsersId, contentText)
 
-		tmpl := h.PostService.ParseHtml("html/blog.tmpl", "blog")
-
-		outputContent, err = h.PostService.PostsRepository.ContentOutput()
+		postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
 		if err != nil {
-			h.Logger.Error("Error ContentOutput", zap.Error(err))
+			h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 		}
 
-		err = tmpl.Execute(w, outputContent)
+		tmpl := h.PostService.ParseHtml("html/blog.tmpl", "blog")
+		err = tmpl.Execute(w, postsLastTen)
 		if err != nil {
-			h.Logger.Error("Error executing template", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
 		return
 	}
 
 	h.Logger.Info("GET request to PostsHandler")
 	tmpl := h.PostService.ParseHtml("html/blog.tmpl", "blog")
-	err := tmpl.Execute(w, outputContent)
+	err = tmpl.Execute(w, postsLastTen)
 	if err != nil {
 		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}
@@ -135,8 +134,12 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 
 	page, offset := h.PostService.ParsePageAndCalculateOffset(pageStr)
+	templateData := h.PostService.CreateTemplateData(page, offset)
+
 	if page == 1 {
-		contentRedis := h.PostService.AddContentToPosts()
+		contentRedis := h.PostService.AddContentToRedis()
+
+		contentRedis.Template = templateData
 		tmpl := h.PostService.ParseHtml("html/viewing_posts_redis.html", "viewing_posts_redis")
 		err := tmpl.Execute(w, contentRedis)
 		if err != nil {
@@ -144,8 +147,6 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if page != 1 {
-		templateData := h.PostService.CreateTemplateData(page, offset)
-
 		tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
 		err := tmpl.Execute(w, templateData)
 		if err != nil {

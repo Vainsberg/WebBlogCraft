@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	config "github.com/Vainsberg/WebBlogCraft/internal/config"
 	"github.com/Vainsberg/WebBlogCraft/internal/db"
@@ -9,6 +10,7 @@ import (
 	httpserver "github.com/Vainsberg/WebBlogCraft/internal/httpServer"
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -37,7 +39,8 @@ func main() {
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache)
+	var redisPostId response.PostsIdRedis
+	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryRedis, cache, redisPostId)
 	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
@@ -45,6 +48,10 @@ func main() {
 	router.HandleFunc("/signup", handler.SignupHandler).Methods("GET", "POST")
 	router.HandleFunc("/signin", handler.SigninHandler).Methods("GET", "POST")
 	router.HandleFunc("/posts/list", handler.ViewingPostsHandler).Methods("GET", "POST")
+	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusFound)
+	})
+
 	fmt.Println("Starting server at", cfg.Addr)
 
 	httpserver.NewHttpServer(router)

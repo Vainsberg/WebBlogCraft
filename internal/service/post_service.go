@@ -20,6 +20,7 @@ type PostService struct {
 	PostsRepository    *repository.RepositoryPosts
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
+	RedisPostsId       response.PostsIdRedis
 }
 
 func NewPostService(logger *zap.Logger,
@@ -27,7 +28,8 @@ func NewPostService(logger *zap.Logger,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts,
 	ClientRedis *redis.RedisClient,
-	cache *cache.Cache) *PostService {
+	cache *cache.Cache,
+	RedisPostsId response.PostsIdRedis) *PostService {
 	return &PostService{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
@@ -35,6 +37,7 @@ func NewPostService(logger *zap.Logger,
 		PostsRepository:    PostsRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
+		RedisPostsId:       RedisPostsId,
 	}
 }
 
@@ -63,8 +66,16 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId, content strin
 	}
 }
 
-func (post *PostService) AddContentToPosts() []response.PostsRedis {
-	err := post.ClientRedis.ClearRedisCache()
+func (post *PostService) AddContentToRedis() response.PostsRedis {
+
+	searchContentRedis, err := post.ClientRedis.GetRedisValue(post.RedisPostsId)
+	if err == nil {
+		if len(searchContentRedis.Content) != 0 {
+			return searchContentRedis
+		}
+	}
+
+	err = post.ClientRedis.ClearRedisCache()
 	if err != nil {
 		post.Logger.Error("ClearRedisCache error: ", zap.Error(err))
 	}
@@ -74,15 +85,19 @@ func (post *PostService) AddContentToPosts() []response.PostsRedis {
 		post.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
 
-	err = post.ClientRedis.AddToCache(searchContent)
+	err = post.ClientRedis.AddToCache(searchContent, post.RedisPostsId)
 	if err != nil {
 		post.Logger.Error("AddToCache error: ", zap.Error(err))
 	}
-	return searchContent
+
+	searchContentRedis, err = post.ClientRedis.GetRedisValue(post.RedisPostsId)
+	if err != nil {
+		post.Logger.Error("GetRedisValue error: ", zap.Error(err))
+	}
+	return searchContentRedis
 }
 
 func (post *PostService) SearchCountPage(page int) response.PageData {
-	var PageData response.PageData
 	var count float64
 
 	sumPosts, err := post.PostsRepository.CountPosts()
@@ -92,9 +107,8 @@ func (post *PostService) SearchCountPage(page int) response.PageData {
 	count = sumPosts / 10.0
 	countInt := pkg.FormatInt(count)
 
-	PageData.TotalPages = countInt
-	PageData.CurrentPage = page
-	return PageData
+	PageList := pkg.CreatePageList(countInt, page)
+	return PageList
 }
 
 func (post *PostService) CreateTemplateData(page, offset int) response.TemplateData {

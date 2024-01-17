@@ -30,14 +30,14 @@ func (p *RepositoryPosts) AddContentAndUserId(UsersId, content string) error {
 	return nil
 }
 
-func (p *RepositoryPosts) ContentOutput() (response.Posts, error) {
+func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 	rows, err := p.db.Query("SELECT Content FROM Users_posts;")
 	if err != nil {
-		return response.Posts{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	Posts := response.Posts{}
+	Posts := &response.Posts{}
 	for rows.Next() {
 		var item string
 		err := rows.Scan(&item)
@@ -85,7 +85,7 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
 	rows, err := p.db.Query("SELECT Content FROM Users_Posts ORDER BY DtCreate DESC LIMIT 10;")
 	if err != nil {
-		return []response.PostsRedis{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -95,7 +95,7 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
 		var content string
 		err := rows.Scan(&content)
 		if err != nil {
-			return []response.PostsRedis{}, err
+			return nil, err
 		}
 
 		contentSlice := strings.Fields(content)
