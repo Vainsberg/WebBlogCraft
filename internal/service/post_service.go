@@ -68,9 +68,7 @@ func (post *PostService) AddContentToRedis() response.PostsRedis {
 
 	searchContentRedis, err := post.ClientRedis.GetRedisValue(cachekey)
 	if err == nil {
-		if len(searchContentRedis.Content) != 0 {
-			return searchContentRedis
-		}
+		return searchContentRedis
 	}
 
 	err = post.ClientRedis.ClearRedisCache()

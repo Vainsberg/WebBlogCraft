@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
@@ -19,8 +18,12 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 }
 
 func (r *RedisClient) AddToCache(searchContent []response.PostsRedis, cachekey string) error {
+	var contents []string
+	for _, post := range searchContent {
+		contents = append(contents, post.Content...)
+	}
 
-	jsonContent, err := json.Marshal(searchContent)
+	jsonContent, err := json.Marshal(contents)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,12 +51,9 @@ func (r *RedisClient) GetRedisValue(cacheKey string) (response.PostsRedis, error
 
 	value, err := r.Client.Get(ctx, cacheKey).Result()
 	if err == redis.Nil {
-		fmt.Println("Key no search")
-	} else if err != nil {
 		return response.PostsRedis{}, err
 	} else {
 		postsRedis.Content = append(postsRedis.Content, value)
 	}
-
 	return postsRedis, nil
 }

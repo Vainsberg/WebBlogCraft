@@ -139,7 +139,7 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if page == 1 {
 		contentRedis := h.PostService.AddContentToRedis()
 
-		contentRedis.Template = templateData
+		//contentRedis.Template = templateData
 		tmpl := h.PostService.ParseHtml("html/viewing_posts_redis.html", "viewing_posts_redis")
 		err := tmpl.Execute(w, contentRedis)
 		if err != nil {
