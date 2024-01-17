@@ -20,7 +20,6 @@ type PostService struct {
 	PostsRepository    *repository.RepositoryPosts
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
-	RedisPostsId       response.PostsIdRedis
 }
 
 func NewPostService(logger *zap.Logger,
@@ -28,8 +27,7 @@ func NewPostService(logger *zap.Logger,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts,
 	ClientRedis *redis.RedisClient,
-	cache *cache.Cache,
-	RedisPostsId response.PostsIdRedis) *PostService {
+	cache *cache.Cache) *PostService {
 	return &PostService{
 		Logger:             logger,
 		UsersRepository:    UsersRepository,
@@ -37,7 +35,6 @@ func NewPostService(logger *zap.Logger,
 		PostsRepository:    PostsRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
-		RedisPostsId:       RedisPostsId,
 	}
 }
 
@@ -67,8 +64,9 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId, content strin
 }
 
 func (post *PostService) AddContentToRedis() response.PostsRedis {
+	cachekey := "all_posts"
 
-	searchContentRedis, err := post.ClientRedis.GetRedisValue(post.RedisPostsId)
+	searchContentRedis, err := post.ClientRedis.GetRedisValue(cachekey)
 	if err == nil {
 		if len(searchContentRedis.Content) != 0 {
 			return searchContentRedis
@@ -85,12 +83,12 @@ func (post *PostService) AddContentToRedis() response.PostsRedis {
 		post.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
 
-	err = post.ClientRedis.AddToCache(searchContent, post.RedisPostsId)
+	err = post.ClientRedis.AddToCache(searchContent, cachekey)
 	if err != nil {
 		post.Logger.Error("AddToCache error: ", zap.Error(err))
 	}
 
-	searchContentRedis, err = post.ClientRedis.GetRedisValue(post.RedisPostsId)
+	searchContentRedis, err = post.ClientRedis.GetRedisValue(cachekey)
 	if err != nil {
 		post.Logger.Error("GetRedisValue error: ", zap.Error(err))
 	}
