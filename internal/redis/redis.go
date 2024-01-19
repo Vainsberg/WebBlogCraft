@@ -18,12 +18,7 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 }
 
 func (r *RedisClient) AddToCache(searchContent []response.PostsRedis, cachekey string) error {
-	var contents []string
-	for _, post := range searchContent {
-		contents = append(contents, post.Content...)
-	}
-
-	jsonContent, err := json.Marshal(contents)
+	jsonContent, err := json.Marshal(searchContent)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,14 +41,22 @@ func (r *RedisClient) ClearRedisCache() error {
 }
 
 func (r *RedisClient) GetRedisValue(cacheKey string) (response.PostsRedis, error) {
-	var postsRedis response.PostsRedis
+	var postRedis response.PostsRedis
+	var content []string
 	ctx := context.Background()
 
 	value, err := r.Client.Get(ctx, cacheKey).Result()
 	if err == redis.Nil {
 		return response.PostsRedis{}, err
-	} else {
-		postsRedis.Content = append(postsRedis.Content, value)
+	} else if err != nil {
+		return response.PostsRedis{}, err
 	}
-	return postsRedis, nil
+
+	err = json.Unmarshal([]byte(value), &content)
+	if err != nil {
+		return response.PostsRedis{}, err
+	}
+	postRedis.Content = content
+
+	return postRedis, nil
 }

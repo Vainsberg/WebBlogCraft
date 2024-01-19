@@ -46,10 +46,19 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 		FOREIGN KEY (Users_id) REFERENCES Users(Id)
 	);
 `)
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Likes (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		user_id INT,
+		post_id INT,
+		liked_at DATETIME,
+		FOREIGN KEY (user_id) REFERENCES Users(id),
+		FOREIGN KEY (post_id) REFERENCES Users_posts(id)
+	);`)
 
 	return db
 }

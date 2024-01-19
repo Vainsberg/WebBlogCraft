@@ -71,11 +71,6 @@ func (post *PostService) AddContentToRedis() response.PostsRedis {
 		return searchContentRedis
 	}
 
-	err = post.ClientRedis.ClearRedisCache()
-	if err != nil {
-		post.Logger.Error("ClearRedisCache error: ", zap.Error(err))
-	}
-
 	searchContent, err := post.PostsRepository.GetLastTenPosts()
 	if err != nil {
 		post.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
@@ -130,4 +125,11 @@ func (post *PostService) ParsePageAndCalculateOffset(pageStr string) (int, int) 
 
 	offset := (page - 1) * 10
 	return page, offset
+}
+
+func (post *PostService) ClearRedisCache() {
+	err := post.ClientRedis.ClearRedisCache()
+	if err != nil {
+		post.Logger.Error("ClearRedisCache error: ", zap.Error(err))
+	}
 }

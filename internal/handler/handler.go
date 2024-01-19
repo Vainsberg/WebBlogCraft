@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -39,6 +40,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
+	postsLastTen = pkg.GenerateRandomNumber(postsLastTen)
 
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
@@ -53,6 +55,8 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
+
+		h.PostService.ClearRedisCache()
 
 		searchUsersId, err := h.AuthService.SessionsRepository.SearchUsersIdSessionCookie(c.Value)
 		if err != nil {
@@ -139,7 +143,7 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if page == 1 {
 		contentRedis := h.PostService.AddContentToRedis()
 
-		//contentRedis.Template = templateData
+		contentRedis.Template = templateData
 		tmpl := h.PostService.ParseHtml("html/viewing_posts_redis.html", "viewing_posts_redis")
 		err := tmpl.Execute(w, contentRedis)
 		if err != nil {
@@ -154,3 +158,7 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+//func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
+
+////}

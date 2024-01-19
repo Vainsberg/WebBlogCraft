@@ -14,9 +14,14 @@ type TemplateData struct {
 	Pagination PageData
 }
 
+type RandomPostId struct {
+	RandPostId int
+}
+
 type PostsRedis struct {
 	Content  []string
 	Template TemplateData
+	Random   RandomPostId
 }
 
 type PostsIdRedis struct {
