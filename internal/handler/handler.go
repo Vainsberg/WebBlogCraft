@@ -35,7 +35,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
-	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
+	postsLastTen, _, err := h.PostService.PostsRepository.GetLastTenPostsAndPostsId()
 	if err != nil {
 		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
@@ -68,7 +68,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 		h.PostService.PublishPostWithSessionUser(searchUsersId, contentText)
 
-		postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
+		postsLastTen, _, err := h.PostService.PostsRepository.GetLastTenPostsAndPostsId()
 		if err != nil {
 			h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 		}
@@ -157,6 +157,20 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("AddLikeToPostHandler accessed")
+	postId := r.FormValue("postId")
+	cookie, err := r.Cookie("session_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		return
+	}
 
-////}
+	userId, err := h.PostService.SessionsRepository.SearchUsersIdSessionCookie(cookie.Value)
+	if err != nil {
+		h.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	h.PostService.LikesRepository.AddLikesToPost(postId, userId)
+
+}

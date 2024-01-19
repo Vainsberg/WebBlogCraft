@@ -1,8 +1,8 @@
 package response
 
 type Posts struct {
-	Content []string
-	PostId  []string
+	Content string
+	PostId  string
 }
 
 type PageData struct {

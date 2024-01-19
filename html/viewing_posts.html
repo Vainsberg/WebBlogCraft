@@ -91,16 +91,13 @@
       <br>
       {{if .Posts}}
       <ul>
-          {{range .Posts}}
-              {{range $index, $value := .Content}}
-                  <li>{{$value}} <a href="/posts/{{index .PostId $index}}/like" class="like-button">Лайк</a></li>
-              {{end}}
-          {{end}}
+        {{range .Posts}}
+            <li>{{ .Content }}<a href="/posts/{{ .PostId }}/like" class="like-button">Лайк</a></li>
+        {{end}}
       </ul>
   {{else}}
       <p>Нет доступных постов.</p>
   {{end}}
-  </center>
   <ul>
       <li>
           {{range .Pagination.TotalPages}}

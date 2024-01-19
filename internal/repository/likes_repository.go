@@ -13,21 +13,11 @@ func NewRepositoryLikes(db *sql.DB) *RepositoryLikes {
 	return &RepositoryLikes{db: db}
 }
 
-func (l *RepositoryLikes) AddLikesToPost(post, user string) error {
-	var searchUserId, searchPostId int
-	rowName := l.db.QueryRow("SELECT Id FROM users WHERE UserName = ? ", user)
-	if err := rowName.Scan(&searchUserId); err != nil && err != sql.ErrNoRows {
-		return err
-	}
-	rowPost := l.db.QueryRow("SELECT Id FROM Users_posts WHERE Content = ? ", post)
-	if err := rowPost.Scan(&searchPostId); err != nil && err != sql.ErrNoRows {
-		return err
-	}
-
+func (l *RepositoryLikes) AddLikesToPost(postId, userId string) error {
 	_, err := l.db.Exec(`
         INSERT INTO Likes (Users_id, Content, DtCreate)
         VALUES (?, ?, CURRENT_TIMESTAMP());
-    `, searchUserId, searchPostId)
+    `, userId, postId)
 
 	if err != nil {
 		fmt.Println(err)

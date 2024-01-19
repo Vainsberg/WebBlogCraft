@@ -92,15 +92,21 @@
    </center>
    <br>
    <center>
-   {{if .Content}}
     <ul>
-        {{range .Content}}
-            <li>{{.}}</li>
-        {{end}}
-    </ul>
-{{else}}
-    <p>Нет доступных постов.</p>
-{{end}}
+      <center>
+        {{if .Content}}
+        <ul>
+            {{range $index, $element := .Content}}
+                {{if lt $index (len $.PostId)}}
+                    <li>{{$element}} <a href="/posts/{{index $.PostId $index}}/like" class="like-button">Лайк</a></li>
+                {{else}}
+                    <li>{{$element}}</li> <!-- Отображаем без ссылки на лайк, если PostId не существует для этого индекса -->
+                {{end}}
+            {{end}}
+        </ul>
+    {{else}}
+        <p>Нет доступных постов.</p>
+    {{end}}
 <ul>
     <li>
         {{range .Template.Pagination.TotalPages}}

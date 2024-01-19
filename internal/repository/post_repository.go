@@ -44,7 +44,7 @@ func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		Posts.Content = append(Posts.Content, item)
+		Posts.Content = item
 	}
 	return Posts, nil
 }
@@ -64,11 +64,7 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 			return nil
 		}
 
-		contentSlice := strings.Fields(content)
-		contentIdSlice := strings.Fields(id)
-
-		post := response.Posts{Content: contentSlice, PostId: contentIdSlice}
-		posts = append(posts, post)
+		posts = append(posts, response.Posts{Content: content, PostId: id})
 	}
 	return posts
 }
@@ -83,31 +79,34 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 	return count, nil
 }
 
-func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
+func (p *RepositoryPosts) GetLastTenPostsAndPostsId() ([]response.PostsRedis, response.PostsRedis, error) {
 	rows, err := p.db.Query("SELECT Content,Id FROM Users_Posts ORDER BY DtCreate DESC LIMIT 10;")
 	if err != nil {
-		return nil, err
+		return nil, response.PostsRedis{}, err
 	}
 	defer rows.Close()
 
 	var posts []response.PostsRedis
+	var postsId response.PostsRedis
 
 	for rows.Next() {
 		var content, id string
 		err := rows.Scan(&content, &id)
 		if err != nil {
-			return nil, err
+			return nil, response.PostsRedis{}, err
 		}
 
 		contentSlice := strings.Fields(content)
-		postIdSlice := strings.Fields(id)
 
-		post := response.PostsRedis{Content: contentSlice, PostId: postIdSlice}
+		post := response.PostsRedis{Content: contentSlice}
+
 		posts = append(posts, post)
+		postsId.PostId = append(postsId.PostId, id)
+
 	}
 
 	if err := rows.Err(); err != nil {
-		return []response.PostsRedis{}, err
+		return nil, response.PostsRedis{}, err
 	}
-	return posts, nil
+	return posts, postsId, nil
 }
