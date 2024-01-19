@@ -50,7 +50,7 @@ func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 }
 
 func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
-	rows, err := p.db.Query("SELECT Content FROM Users_posts LIMIT ? OFFSET ?", 10, offset)
+	rows, err := p.db.Query("SELECT Content,Id FROM Users_posts LIMIT ? OFFSET ?", 10, offset)
 	if err != nil {
 		return nil
 	}
@@ -58,15 +58,16 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 
 	var posts []response.Posts
 	for rows.Next() {
-		var content string
-		err := rows.Scan(&content)
+		var content, id string
+		err := rows.Scan(&content, &id)
 		if err != nil {
 			return nil
 		}
 
 		contentSlice := strings.Fields(content)
+		contentIdSlice := strings.Fields(id)
 
-		post := response.Posts{Content: contentSlice}
+		post := response.Posts{Content: contentSlice, PostId: contentIdSlice}
 		posts = append(posts, post)
 	}
 	return posts
@@ -83,7 +84,7 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 }
 
 func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
-	rows, err := p.db.Query("SELECT Content FROM Users_Posts ORDER BY DtCreate DESC LIMIT 10;")
+	rows, err := p.db.Query("SELECT Content,Id FROM Users_Posts ORDER BY DtCreate DESC LIMIT 10;")
 	if err != nil {
 		return nil, err
 	}
@@ -92,15 +93,16 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.PostsRedis, error) {
 	var posts []response.PostsRedis
 
 	for rows.Next() {
-		var content string
-		err := rows.Scan(&content)
+		var content, id string
+		err := rows.Scan(&content, &id)
 		if err != nil {
 			return nil, err
 		}
 
 		contentSlice := strings.Fields(content)
+		postIdSlice := strings.Fields(id)
 
-		post := response.PostsRedis{Content: contentSlice}
+		post := response.PostsRedis{Content: contentSlice, PostId: postIdSlice}
 		posts = append(posts, post)
 	}
 

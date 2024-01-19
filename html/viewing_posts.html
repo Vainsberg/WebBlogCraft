@@ -85,33 +85,33 @@
       </div>
     </div>
   </nav>
-    <br>s
     <br>
     <center>
-        <h3>Лента постов:</h3>
-    </center>
-    <br>
-    <center>
-    {{if .Posts}}
-    <ul>
-        {{range .Posts}}
-            <li>{{.Content}}</li>
-        {{end}}
-    </ul>
-    {{else}}
-        <p>Нет доступных постов.</p>
-    {{end}}
-    <ul>
-         <li>
-            {{range .Pagination.TotalPages}}
-                 {{if eq $.Pagination.CurrentPage . }}
-                     {{.}}
-                 {{else}}
-                     <a href="/posts/list?page={{.}}">{{.}}</a>
-                {{end}}
-             {{end}}
-          </li> 
-    </ul>   
-    </center> 
+      <h3>Лента постов:</h3>
+      <br>
+      {{if .Posts}}
+      <ul>
+          {{range .Posts}}
+              {{range $index, $value := .Content}}
+                  <li>{{$value}} <a href="/posts/{{index .PostId $index}}/like" class="like-button">Лайк</a></li>
+              {{end}}
+          {{end}}
+      </ul>
+  {{else}}
+      <p>Нет доступных постов.</p>
+  {{end}}
+  </center>
+  <ul>
+      <li>
+          {{range .Pagination.TotalPages}}
+              {{if eq $.Pagination.CurrentPage .}}
+                  <span>{{.}}</span> 
+              {{else}}
+                  <a href="/posts/list?page={{.}}">{{.}}</a>
+              {{end}}
+          {{end}}
+      </li> 
+  </ul>   
+  </center>  
 </body>
 </html>

@@ -2,6 +2,7 @@ package response
 
 type Posts struct {
 	Content []string
+	PostId  []string
 }
 
 type PageData struct {
@@ -14,14 +15,10 @@ type TemplateData struct {
 	Pagination PageData
 }
 
-type RandomPostId struct {
-	RandPostId int
-}
-
 type PostsRedis struct {
 	Content  []string
+	PostId   []string
 	Template TemplateData
-	Random   RandomPostId
 }
 
 type PostsIdRedis struct {

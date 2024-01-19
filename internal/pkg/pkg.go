@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"math"
-	"math/rand"
-	"time"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/google/uuid"
@@ -24,14 +22,4 @@ func CreatePageList(countInt, page int) response.PageData {
 	}
 	Pagelist.CurrentPage = page
 	return Pagelist
-}
-
-func GenerateRandomNumber(contentsRedis []response.PostsRedis) []response.PostsRedis {
-	rand.Seed(time.Now().UnixNano())
-
-	for i := range contentsRedis {
-		randomPostID := rand.Int()
-		contentsRedis[i].Random.RandPostId = randomPostID
-	}
-	return contentsRedis
 }
