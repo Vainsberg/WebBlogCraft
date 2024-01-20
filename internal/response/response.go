@@ -19,6 +19,7 @@ type TemplateData struct {
 type PostsRedis struct {
 	Content  []string
 	PostId   []string
+	Likes    []int
 	Template TemplateData
 }
 

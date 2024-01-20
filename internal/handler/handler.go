@@ -165,7 +165,7 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
 		return
 	}
-	countlikes, err := h.PostService.ProcessLikeAction(cookie.Value, postId)
+	_, err = h.PostService.ProcessLikeAction(cookie.Value, postId)
 	if err != nil {
 		h.Logger.Error("ProcessLikeAction error:", zap.Error(err))
 	}

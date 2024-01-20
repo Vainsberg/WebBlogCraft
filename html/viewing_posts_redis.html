@@ -97,10 +97,16 @@
         {{if .Content}}
         <ul>
             {{range $index, $element := .Content}}
-                {{if lt $index (len $.PostId)}}
-                    <li>{{$element}} <a href="/posts/{{index $.PostId $index}}/like" class="like-button">Лайк</a></li>
-
-                {{end}}
+                <li>
+                    {{$element}}
+                    <a href="/posts/{{index $.PostId $index}}/like" class="like-button">Лайк</a>
+                    Лайков:
+                    {{if lt $index (len $.Likes)}}
+                        {{index $.Likes $index}}
+                    {{else}}
+                        0
+                    {{end}}
+                </li>
             {{end}}
         </ul>
     {{else}}
