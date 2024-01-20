@@ -59,7 +59,7 @@ func (post *PostService) ParseHtml(textHtml, templateName string) *template.Temp
 	return tmpl
 }
 
-func (post *PostService) PublishPostWithSessionUser(searchUsersId, content string) {
+func (post *PostService) PublishPostWithSessionUser(searchUsersId int, content string) {
 	err := post.PostsRepository.AddContentAndUserId(searchUsersId, content)
 	if err != nil {
 		post.Logger.Error("AddContentAndUserName error: ", zap.Error(err))
@@ -144,30 +144,34 @@ func (post *PostService) ClearRedisCache() {
 	}
 }
 
-func (post *PostService) ProcessLikeAction(cookie, postId string) (int, error) {
-	userId, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+func (post *PostService) ProcessLikeAction(cookie, postIDStr string) (int, error) {
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		return 0, err
+	}
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
 	if err != nil {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
 
-	chekingLikeToPost, err := post.LikesRepository.CheckingLikes(userId, postId)
+	chekingLikeToPost, err := post.LikesRepository.CheckingLikes(userID, postID)
 	if err != nil {
 		post.Logger.Error("CheckingLikes error:", zap.Error(err))
 	}
 
 	if chekingLikeToPost == false {
-		err := post.LikesRepository.AddLikesToPost(postId, userId)
+		err := post.LikesRepository.AddLikesToPost(userID, postID)
 		if err != nil {
 			post.Logger.Error("AddLikesToPost error:", zap.Error(err))
 		}
 	} else if chekingLikeToPost == true {
-		err = post.LikesRepository.RemoveLikeFromPost(postId, userId)
+		err = post.LikesRepository.RemoveLikeFromPost(userID, postID)
 		if err != nil {
 			post.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
 		}
 	}
 
-	countLikes, err := post.LikesRepository.CountLikes(postId)
+	countLikes, err := post.LikesRepository.CountLikes(postID)
 	if err != nil {
 		post.Logger.Error("CountLikes error:", zap.Error(err))
 	}

@@ -17,7 +17,7 @@ func NewRepositoryPosts(db *sql.DB) *RepositoryPosts {
 	return &RepositoryPosts{db: db}
 }
 
-func (p *RepositoryPosts) AddContentAndUserId(UsersId, content string) error {
+func (p *RepositoryPosts) AddContentAndUserId(UsersId int, content string) error {
 	_, err := p.db.Exec(`
         INSERT INTO Users_posts (Users_id, Content, DtCreate)
         VALUES (?, ?, CURRENT_TIMESTAMP());

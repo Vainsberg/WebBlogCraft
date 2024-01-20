@@ -13,11 +13,11 @@ func NewRepositoryLikes(db *sql.DB) *RepositoryLikes {
 	return &RepositoryLikes{db: db}
 }
 
-func (l *RepositoryLikes) AddLikesToPost(postId, userId string) error {
+func (l *RepositoryLikes) AddLikesToPost(userID, postID int) error {
 	_, err := l.db.Exec(`
-        INSERT INTO Likes (Users_id, Content, DtCreate)
+        INSERT INTO Likes (Users_id, Posts_id, Liked_at)
         VALUES (?, ?, CURRENT_TIMESTAMP());
-    `, userId, postId)
+    `, userID, postID)
 
 	if err != nil {
 		fmt.Println(err)
@@ -27,13 +27,13 @@ func (l *RepositoryLikes) AddLikesToPost(postId, userId string) error {
 
 }
 
-func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID string) error {
+func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID int) error {
 	_, err := l.db.Exec(`
-	DELETE likes
-	FROM likes
-	JOIN users ON likes.user_id = users.id
-	JOIN Users_posts ON likes.post_id = Users_posts.id
-	WHERE users.id = ? AND Users_posts.id = ?
+	DELETE Likes
+	FROM Likes
+	JOIN users ON Likes.Users_id = Users.Id
+	JOIN Users_posts ON Likes.Posts_id = Users_posts.id
+	WHERE Users.Id = ? AND Users_posts.Id = ?
 `, userID, postID)
 	if err != nil {
 		return err
@@ -41,19 +41,19 @@ func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID string) error {
 	return nil
 }
 
-func (l *RepositoryLikes) CheckingLikes(userID, postID string) (bool, error) {
+func (l *RepositoryLikes) CheckingLikes(userID, postID int) (bool, error) {
 	var searchUserId, searchPostId string
-	row := l.db.QueryRow("SELECT * FROM likes WHERE Users_id = ? AND Content = ?", userID, postID)
+	row := l.db.QueryRow("SELECT * FROM Likes WHERE Users_id = ? AND Content = ?", userID, postID)
 	if err := row.Scan(&searchUserId, &searchPostId); err != sql.ErrNoRows {
 		return false, nil
 	}
 	return true, nil
 }
 
-func (l *RepositoryLikes) CountLikes(postID string) (int, error) {
+func (l *RepositoryLikes) CountLikes(postID int) (int, error) {
 	var count int
 
-	err := l.db.QueryRow("SELECT COUNT(*) FROM likes WHERE Post_id = ?", postID).Scan(&count)
+	err := l.db.QueryRow("SELECT COUNT(*) FROM Likes WHERE Posts_id = ?", postID).Scan(&count)
 	if err != nil {
 		return 0, err
 	}

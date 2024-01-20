@@ -56,15 +56,15 @@ func (r *RepositorySessions) DeleteSessionCookie(session_token string) error {
 	return nil
 }
 
-func (s *RepositorySessions) SearchUsersIdSessionCookie(session_token string) (string, error) {
-	var searcUsersId string
+func (s *RepositorySessions) SearchUsersIdSessionCookie(session_token string) (int, error) {
+	var searcUsersId int
 
 	row := s.db.QueryRow(`SELECT Sessions.Users_Id 
 	FROM Sessions
 	JOIN Users ON Sessions.Users_id = Users_Id
 	WHERE Sessions.Session_id = ? `, session_token)
 	if err := row.Scan(&searcUsersId); err != nil && err != sql.ErrNoRows {
-		return "", err
+		return 0, err
 	}
 	return searcUsersId, nil
 }

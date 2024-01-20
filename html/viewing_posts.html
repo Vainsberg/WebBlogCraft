@@ -91,13 +91,47 @@
       <br>
       {{if .Posts}}
       <ul>
-        {{range .Posts}}
-            <li>{{ .Content }}<a href="/posts/{{ .PostId }}/like" class="like-button">Лайк</a> Лайков: {{.Likes}}</li>
-        {{end}}
+          {{range .Posts}}
+              <li>
+                  {{ .Content }}
+                  <!-- Используем data-атрибут для хранения ID поста -->
+                  <a href="#" class="like-button" post-id="{{ .PostId }}">Лайк</a>
+                  Лайков: <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
+              </li>
+          {{end}}
       </ul>
   {{else}}
       <p>Нет доступных постов.</p>
   {{end}}
+  <script>
+      document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('.like-button').forEach(button => {
+              button.addEventListener('click', function(event) {
+                  event.preventDefault();
+                  const postId = this.getAttribute('post-id');
+                  const likesCountElement = document.getElementById('likes-count-' + postId);
+  
+                  fetch(`/posts/${postId}/like`, {
+                      method: 'POST',
+                  })
+                  .then(response => {
+                      if (response.ok) {
+                          return response.json(); 
+                      }
+                      throw new Error('Network response was not ok.');
+                  })
+                  .then(data => {
+                      if (likesCountElement) {
+                          likesCountElement.textContent = data.newLikesCount;
+                      }
+                  })
+                  .catch(error => {
+                      console.error('Ошибка при добавлении лайка:', error);
+                  });
+              });
+          });
+      });
+  </script>
   <ul>
       <li>
           {{range .Pagination.TotalPages}}
