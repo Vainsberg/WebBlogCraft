@@ -171,6 +171,25 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
 
-	h.PostService.LikesRepository.AddLikesToPost(postId, userId)
+	chekingLikeToPost, err := h.PostService.LikesRepository.CheckingLikes(userId, postId)
+	if err != nil {
+		h.Logger.Error("CheckingLikes error:", zap.Error(err))
+	}
 
+	if chekingLikeToPost == false {
+		err := h.PostService.LikesRepository.AddLikesToPost(postId, userId)
+		if err != nil {
+			h.Logger.Error("AddLikesToPost error:", zap.Error(err))
+		}
+	} else if chekingLikeToPost == true {
+		err = h.PostService.LikesRepository.RemoveLikeFromPost(postId, userId)
+		if err != nil {
+			h.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
+		}
+	}
+
+	//	countLikes, err := h.PostService.LikesRepository.CountLikes(postId)
+	if err != nil {
+		h.Logger.Error("CountLikes error:", zap.Error(err))
+	}
 }

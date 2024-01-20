@@ -27,7 +27,7 @@ func (l *RepositoryLikes) AddLikesToPost(postId, userId string) error {
 
 }
 
-func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID int) error {
+func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID string) error {
 	_, err := l.db.Exec(`
 	DELETE likes
 	FROM likes
@@ -39,4 +39,23 @@ func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID int) error {
 		return err
 	}
 	return nil
+}
+
+func (l *RepositoryLikes) CheckingLikes(userID, postID string) (bool, error) {
+	var searchUserId, searchPostId string
+	row := l.db.QueryRow("SELECT * FROM likes WHERE Users_id = ? AND Content = ?", userID, postID)
+	if err := row.Scan(&searchUserId, &searchPostId); err != sql.ErrNoRows {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (l *RepositoryLikes) CountLikes(postID string) (int, error) {
+	var count int
+
+	err := l.db.QueryRow("SELECT COUNT(*) FROM likes WHERE Post_id = ?", postID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

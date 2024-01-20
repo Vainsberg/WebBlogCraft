@@ -92,7 +92,7 @@
       {{if .Posts}}
       <ul>
         {{range .Posts}}
-            <li>{{ .Content }}<a href="/posts/{{ .PostId }}/like" class="like-button">Лайк</a></li>
+            <li>{{ .Content }}<a href="/posts/{{ .PostId }}/like" class="like-button">Лайк</a> Лайков: {{.Likes}}</li>
         {{end}}
       </ul>
   {{else}}

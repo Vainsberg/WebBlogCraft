@@ -3,6 +3,7 @@ package response
 type Posts struct {
 	Content string
 	PostId  string
+	Likes   int
 }
 
 type PageData struct {
