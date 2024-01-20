@@ -143,3 +143,33 @@ func (post *PostService) ClearRedisCache() {
 		post.Logger.Error("ClearRedisCache error: ", zap.Error(err))
 	}
 }
+
+func (post *PostService) ProcessLikeAction(cookie, postId string) (int, error) {
+	userId, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	chekingLikeToPost, err := post.LikesRepository.CheckingLikes(userId, postId)
+	if err != nil {
+		post.Logger.Error("CheckingLikes error:", zap.Error(err))
+	}
+
+	if chekingLikeToPost == false {
+		err := post.LikesRepository.AddLikesToPost(postId, userId)
+		if err != nil {
+			post.Logger.Error("AddLikesToPost error:", zap.Error(err))
+		}
+	} else if chekingLikeToPost == true {
+		err = post.LikesRepository.RemoveLikeFromPost(postId, userId)
+		if err != nil {
+			post.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
+		}
+	}
+
+	countLikes, err := post.LikesRepository.CountLikes(postId)
+	if err != nil {
+		post.Logger.Error("CountLikes error:", zap.Error(err))
+	}
+	return countLikes, nil
+}

@@ -165,31 +165,8 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
 		return
 	}
-
-	userId, err := h.PostService.SessionsRepository.SearchUsersIdSessionCookie(cookie.Value)
+	countlikes, err := h.PostService.ProcessLikeAction(cookie.Value, postId)
 	if err != nil {
-		h.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
-	}
-
-	chekingLikeToPost, err := h.PostService.LikesRepository.CheckingLikes(userId, postId)
-	if err != nil {
-		h.Logger.Error("CheckingLikes error:", zap.Error(err))
-	}
-
-	if chekingLikeToPost == false {
-		err := h.PostService.LikesRepository.AddLikesToPost(postId, userId)
-		if err != nil {
-			h.Logger.Error("AddLikesToPost error:", zap.Error(err))
-		}
-	} else if chekingLikeToPost == true {
-		err = h.PostService.LikesRepository.RemoveLikeFromPost(postId, userId)
-		if err != nil {
-			h.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
-		}
-	}
-
-	//	countLikes, err := h.PostService.LikesRepository.CountLikes(postId)
-	if err != nil {
-		h.Logger.Error("CountLikes error:", zap.Error(err))
+		h.Logger.Error("ProcessLikeAction error:", zap.Error(err))
 	}
 }
