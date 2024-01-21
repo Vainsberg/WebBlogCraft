@@ -117,7 +117,7 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 		userPassword := r.FormValue("password")
 
 		_, err := r.Cookie("session_token")
-		if errors.Is(err, http.ErrNoCookie) {
+		if !errors.Is(err, http.ErrNoCookie) {
 			fmt.Fprint(w, h.PostService.HtmlContent("html/signin_error.html"))
 			return
 		}
