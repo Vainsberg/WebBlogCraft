@@ -64,3 +64,13 @@ func (auth *AuthService) CheckUserExistence(userName string) string {
 	}
 	return searchName
 }
+
+func (auth *AuthService) DeleteSessionCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	}
+}

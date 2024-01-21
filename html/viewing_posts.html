@@ -94,7 +94,6 @@
           {{range .Posts}}
               <li>
                   {{ .Content }}
-                  <!-- Используем data-атрибут для хранения ID поста -->
                   <a href="#" class="like-button" post-id="{{ .PostId }}">Лайк</a>
                   Лайков: <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
               </li>
@@ -110,7 +109,7 @@
                   event.preventDefault();
                   const postId = this.getAttribute('post-id');
                   const likesCountElement = document.getElementById('likes-count-' + postId);
-  
+                  console.log(postId);
                   fetch(`/posts/${postId}/like`, {
                       method: 'POST',
                   })

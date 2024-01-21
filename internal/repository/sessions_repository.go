@@ -38,17 +38,10 @@ func (s *RepositorySessions) SearchSessionCookie(session_token string) string {
 	return searchSessionToken
 }
 
-func (s *RepositorySessions) CheckingTimeforCookie(session_token string) bool {
-	var timeCookie time.Time
-	row := s.db.QueryRow("SELECT Expiry FROM Sessions WHERE Session_id = ?;", session_token)
-	if err := row.Scan(&timeCookie); err != nil && err != sql.ErrNoRows {
-		return false
-	}
-	return !time.Now().After(timeCookie)
-}
+func (r *RepositorySessions) DeleteExpiredSessions() error {
+	thresholdTime := time.Now().Add(-24 * time.Hour)
 
-func (r *RepositorySessions) DeleteSessionCookie(session_token string) error {
-	_, err := r.db.Exec("DELETE FROM Sessions WHERE Session_id = ?;", session_token)
+	_, err := r.db.Exec("DELETE FROM Sessions WHERE Expiry < ?;", thresholdTime)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -86,10 +79,9 @@ func (s *RepositorySessions) SearchAccountInSessions(username string) string {
 	return sessionID
 }
 
-func (r *RepositorySessions) DeleteSessionCookieAccount(userName string) error {
+func (r *RepositorySessions) DeleteSessionCookieAccount(session_token string) error {
 	_, err := r.db.Exec(`DELETE FROM Sessions
-	JOIN Users ON Sessions.Users_id = Users_Id
-	WHERE Users.UsersName = ?`, userName)
+ 	WHERE Session_id = ?`, session_token)
 	if err != nil {
 		fmt.Println(err)
 		return err

@@ -43,8 +43,8 @@ func (l *RepositoryLikes) RemoveLikeFromPost(userID, postID int) error {
 
 func (l *RepositoryLikes) CheckingLikes(userID, postID int) (bool, error) {
 	var searchUserId, searchPostId string
-	row := l.db.QueryRow("SELECT * FROM Likes WHERE Users_id = ? AND Content = ?", userID, postID)
-	if err := row.Scan(&searchUserId, &searchPostId); err != sql.ErrNoRows {
+	row := l.db.QueryRow("SELECT * FROM Likes WHERE Users_id = ? AND Posts_id = ?", userID, postID)
+	if err := row.Scan(&searchUserId, &searchPostId); err == sql.ErrNoRows {
 		return false, nil
 	}
 	return true, nil

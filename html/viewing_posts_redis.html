@@ -114,10 +114,10 @@
                     event.preventDefault();
                     const postId = this.getAttribute('post-id');
                     const likesCountElement = document.getElementById('likes-count-' + postId);
-
+                    console.log(postId);
                     fetch(`/posts/${postId}/like`, {
-                        method: 'POST',
-                    })
+                     method: 'POST',
+                      })
                     .then(response => {
                         if (response.ok) {
                             return response.json();

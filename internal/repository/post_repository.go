@@ -80,7 +80,7 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 }
 
 func (p *RepositoryPosts) GetLastTenPostsAndPostsId() ([]response.PostsRedis, response.PostsRedis, error) {
-	rows, err := p.db.Query("SELECT Content,Id FROM Users_Posts ORDER BY DtCreate DESC LIMIT 10;")
+	rows, err := p.db.Query("SELECT Content,Id FROM Users_posts ORDER BY DtCreate DESC LIMIT 10;")
 	if err != nil {
 		return nil, response.PostsRedis{}, err
 	}

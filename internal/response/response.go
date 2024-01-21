@@ -26,3 +26,7 @@ type PostsRedis struct {
 type PostsIdRedis struct {
 	PostId []string
 }
+
+type LikeResponse struct {
+	NewLikesCount int `json:"newLikesCount"`
+}
