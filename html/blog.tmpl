@@ -95,17 +95,20 @@
   <br>
    <center>
     <h3>Лента постов:</h3>
-  {{if .}}
-   <ul>
-       {{range .}}
-           {{range .Content}}
-               <li>{{.}}</li>
-           {{end}}
-       {{end}}
-   </ul>
- {{else}}
-   <p>Нет доступных постов.</p>
-{{end}} 
+    <br>
+    {{if .}}
+    <ul>
+        {{range .}}
+            <li>
+                {{ .Content }}
+                Лайков: <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
+            </li>
+        {{end}}
+    </ul>
+    {{else}}
+        <p>Нет доступных постов.</p>
+    {{end}}
+    </ul>
 </center>
 <br>
 <center>

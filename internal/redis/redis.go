@@ -17,13 +17,9 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 	return &RedisClient{Client: client}
 }
 
-func (r *RedisClient) AddToCache(searchContent []response.PostsRedis, cachekey string) error {
-	var contents []string
-	for _, post := range searchContent {
-		contents = append(contents, post.Content...)
-	}
+func (r *RedisClient) AddToCache(searchContent []response.Posts, cachekey string) error {
 
-	jsonContent, err := json.Marshal(contents)
+	jsonContent, err := json.Marshal(searchContent)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,24 +41,22 @@ func (r *RedisClient) ClearRedisCache() error {
 	return nil
 }
 
-func (r *RedisClient) GetRedisValue(cacheKey string) (response.PostsRedis, error) {
-	var postRedis response.PostsRedis
-	var content []string
+func (r *RedisClient) GetRedisValue(cacheKey string) ([]response.Posts, error) {
+	var postRedis []response.Posts
 
 	ctx := context.Background()
 
 	value, err := r.Client.Get(ctx, cacheKey).Result()
 	if err == redis.Nil {
-		return response.PostsRedis{}, err
+		return nil, err
 	} else if err != nil {
-		return response.PostsRedis{}, err
+		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(value), &content)
+	err = json.Unmarshal([]byte(value), &postRedis)
 	if err != nil {
-		return response.PostsRedis{}, err
+		return nil, err
 	}
-	postRedis.Content = content
 
 	return postRedis, nil
 }

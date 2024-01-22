@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 )
@@ -50,7 +49,10 @@ func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 }
 
 func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
-	rows, err := p.db.Query("SELECT Content,Id FROM Users_posts LIMIT ? OFFSET ?", 10, offset)
+	rows, err := p.db.Query("SELECT Users_posts.Id, Users_posts.Content, COUNT(Likes.Id) FROM Users_posts "+
+		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
+		"GROUP BY Users_posts.Id, Users_posts.Content "+
+		"LIMIT ? OFFSET ?;", 10, offset)
 	if err != nil {
 		return nil
 	}
@@ -58,13 +60,14 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 
 	var posts []response.Posts
 	for rows.Next() {
-		var content, id string
-		err := rows.Scan(&content, &id)
+		var id, content string
+		var likes int
+		err := rows.Scan(&id, &content, &likes)
 		if err != nil {
 			return nil
 		}
 
-		posts = append(posts, response.Posts{Content: content, PostId: id})
+		posts = append(posts, response.Posts{Content: content, PostId: id, Likes: likes})
 	}
 	return posts
 }
@@ -79,34 +82,34 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 	return count, nil
 }
 
-func (p *RepositoryPosts) GetLastTenPostsAndPostsId() ([]response.PostsRedis, response.PostsRedis, error) {
-	rows, err := p.db.Query("SELECT Content,Id FROM Users_posts ORDER BY DtCreate DESC LIMIT 10;")
+func (p *RepositoryPosts) GetLastTenPosts() ([]response.Posts, error) {
+	rows, err := p.db.Query("SELECT Users_posts.Id, Users_posts.Content, COUNT(Likes.Id) FROM Users_posts " +
+		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id " +
+		"GROUP BY Users_posts.Id, Users_posts.Content " +
+		"ORDER BY DtCreate DESC " +
+		"LIMIT 10;")
 	if err != nil {
-		return nil, response.PostsRedis{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []response.PostsRedis
-	var postsId response.PostsRedis
+	var posts []response.Posts
 
 	for rows.Next() {
-		var content, id string
-		err := rows.Scan(&content, &id)
+		var id, content string
+		var likes int
+		err := rows.Scan(&id, &content, &likes)
 		if err != nil {
-			return nil, response.PostsRedis{}, err
+			return nil, err
 		}
 
-		contentSlice := strings.Fields(content)
-
-		post := response.PostsRedis{Content: contentSlice}
-
+		post := response.Posts{Content: content, PostId: id, Likes: likes}
 		posts = append(posts, post)
-		postsId.PostId = append(postsId.PostId, id)
 
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, response.PostsRedis{}, err
+		return nil, err
 	}
-	return posts, postsId, nil
+	return posts, nil
 }

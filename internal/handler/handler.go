@@ -38,7 +38,7 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
-	postsLastTen, _, err := h.PostService.PostsRepository.GetLastTenPostsAndPostsId()
+	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
 	if err != nil {
 		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
@@ -71,7 +71,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 		h.PostService.PublishPostWithSessionUser(searchUsersId, contentText)
 
-		postsLastTen, _, err := h.PostService.PostsRepository.GetLastTenPostsAndPostsId()
+		postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
 		if err != nil {
 			h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 		}
@@ -104,7 +104,6 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, h.PostService.HtmlContent("html/registration_confirmation_page.html"))
 			return
 		}
-
 		fmt.Fprint(w, h.PostService.HtmlContent("html/signup_wrong.html"))
 		return
 	}
@@ -135,32 +134,27 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, h.PostService.HtmlContent("html/authorization.html"))
 		return
 	}
-
 	fmt.Fprint(w, h.PostService.HtmlContent("html/signin.html"))
 }
 
 func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
+	var posts response.TemplateData
 	pageStr := r.URL.Query().Get("page")
 
 	page, offset := h.PostService.ParsePageAndCalculateOffset(pageStr)
-	templateData := h.PostService.CreateTemplateData(page, offset)
 
 	if page == 1 {
-		contentRedis := h.PostService.AddContentToRedis()
-
-		contentRedis.Template = templateData
-		tmpl := h.PostService.ParseHtml("html/viewing_posts_redis.html", "viewing_posts_redis")
-		err := tmpl.Execute(w, contentRedis)
-		if err != nil {
-			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
-		}
+		posts = h.PostService.GenerateTemplateDataPostsRedis(page)
 
 	} else if page != 1 {
-		tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
-		err := tmpl.Execute(w, templateData)
-		if err != nil {
-			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
-		}
+		posts = h.PostService.GenerateTemplateDataPosts(page, offset)
+
+	}
+
+	tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
+	err := tmpl.Execute(w, posts)
+	if err != nil {
+		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 	}
 }
 

@@ -66,20 +66,15 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId int, content s
 	}
 }
 
-func (post *PostService) AddContentToRedis() response.PostsRedis {
+func (post *PostService) AddContentToRedis() []response.Posts {
 	cachekey := "all_posts"
 
 	searchContentRedis, err := post.ClientRedis.GetRedisValue(cachekey)
 	if err == nil {
-		_, searchPostIdContent, err := post.PostsRepository.GetLastTenPostsAndPostsId()
-		if err != nil {
-			post.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
-		}
-		searchContentRedis.PostId = searchPostIdContent.PostId
 		return searchContentRedis
 	}
 
-	searchContent, searchPostIdContent, err := post.PostsRepository.GetLastTenPostsAndPostsId()
+	searchContent, err := post.PostsRepository.GetLastTenPosts()
 	if err != nil {
 		post.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
@@ -94,7 +89,6 @@ func (post *PostService) AddContentToRedis() response.PostsRedis {
 		post.Logger.Error("GetRedisValue error: ", zap.Error(err))
 	}
 
-	searchContentRedis.PostId = searchPostIdContent.PostId
 	return searchContentRedis
 }
 
@@ -112,12 +106,23 @@ func (post *PostService) SearchCountPage(page int) response.PageData {
 	return PageList
 }
 
-func (post *PostService) CreateTemplateData(page, offset int) response.TemplateData {
+func (post *PostService) GenerateTemplateDataPosts(page, offset int) response.TemplateData {
 	countPage := post.SearchCountPage(page)
 	offsetPosts := post.PostsRepository.CalculatePageOffset(offset)
 
 	data := response.TemplateData{
 		Posts:      offsetPosts,
+		Pagination: countPage,
+	}
+	return data
+}
+
+func (post *PostService) GenerateTemplateDataPostsRedis(page int) response.TemplateData {
+	countPage := post.SearchCountPage(page)
+	postsRedis := post.AddContentToRedis()
+
+	data := response.TemplateData{
+		Posts:      postsRedis,
 		Pagination: countPage,
 	}
 	return data
