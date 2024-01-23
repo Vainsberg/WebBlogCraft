@@ -49,9 +49,10 @@ func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 }
 
 func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
-	rows, err := p.db.Query("SELECT Users_posts.Id, Users_posts.Content, COUNT(Likes.Id) FROM Users_posts "+
+	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts "+
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
-		"GROUP BY Users_posts.Id, Users_posts.Content "+
+		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id "+
+		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content "+
 		"LIMIT ? OFFSET ?;", 10, offset)
 	if err != nil {
 		return nil
@@ -60,14 +61,14 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 
 	var posts []response.Posts
 	for rows.Next() {
-		var id, content string
+		var id, content, user string
 		var likes int
-		err := rows.Scan(&id, &content, &likes)
+		err := rows.Scan(&id, &content, &likes, &user)
 		if err != nil {
 			return nil
 		}
 
-		posts = append(posts, response.Posts{Content: content, PostId: id, Likes: likes})
+		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes})
 	}
 	return posts
 }
@@ -83,10 +84,11 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 }
 
 func (p *RepositoryPosts) GetLastTenPosts() ([]response.Posts, error) {
-	rows, err := p.db.Query("SELECT Users_posts.Id, Users_posts.Content, COUNT(Likes.Id) FROM Users_posts " +
+	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts " +
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id " +
-		"GROUP BY Users_posts.Id, Users_posts.Content " +
-		"ORDER BY DtCreate DESC " +
+		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id " +
+		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content " +
+		"ORDER BY Users.DtCreate DESC " +
 		"LIMIT 10;")
 	if err != nil {
 		return nil, err
@@ -96,14 +98,14 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.Posts, error) {
 	var posts []response.Posts
 
 	for rows.Next() {
-		var id, content string
+		var id, content, user string
 		var likes int
-		err := rows.Scan(&id, &content, &likes)
+		err := rows.Scan(&id, &content, &likes, &user)
 		if err != nil {
 			return nil, err
 		}
 
-		post := response.Posts{Content: content, PostId: id, Likes: likes}
+		post := response.Posts{Content: content, PostId: id, UserName: user, Likes: likes}
 		posts = append(posts, post)
 
 	}

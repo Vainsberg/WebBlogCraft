@@ -91,6 +91,9 @@
         {{if .Posts}}
           {{range .Posts}}
             <div class="post">
+              <div class="post-header">
+                <strong>{{ .UserName }}</strong> 
+              </div>
               <div class="post-body">
                 {{ .Content }}
               </div>

@@ -6,9 +6,10 @@ type PageData struct {
 }
 
 type Posts struct {
-	Content string
-	PostId  string
-	Likes   int
+	Content  string
+	PostId   string
+	UserName string
+	Likes    int
 }
 
 type TemplateData struct {
