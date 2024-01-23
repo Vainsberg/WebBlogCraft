@@ -164,12 +164,12 @@ func (post *PostService) ProcessLikeAction(cookie, postIDStr string) (int, error
 		post.Logger.Error("CheckingLikes error:", zap.Error(err))
 	}
 
-	if chekingLikeToPost == false {
+	if !chekingLikeToPost {
 		err := post.LikesRepository.AddLikesToPost(userID, postID)
 		if err != nil {
 			post.Logger.Error("AddLikesToPost error:", zap.Error(err))
 		}
-	} else if chekingLikeToPost == true {
+	} else {
 		err = post.LikesRepository.RemoveLikeFromPost(userID, postID)
 		if err != nil {
 			post.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
@@ -179,6 +179,10 @@ func (post *PostService) ProcessLikeAction(cookie, postIDStr string) (int, error
 	countLikes, err := post.LikesRepository.CountLikes(postID)
 	if err != nil {
 		post.Logger.Error("CountLikes error:", zap.Error(err))
+	}
+
+	if countLikes <= 10 {
+		post.ClearRedisCache()
 	}
 	return countLikes, nil
 }

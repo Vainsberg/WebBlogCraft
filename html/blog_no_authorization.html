@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -36,7 +37,7 @@
           color: #fff;
       }
 
-    
+     
       .description {
           background-color: #f0f0f0;
           padding: 20px;
@@ -64,7 +65,8 @@
               Пользователь
             </a>
             <ul class="dropdown-menu">
-         <li><a class="dropdown-item" href="/signout">Выйти</a></li>
+              <li><a class="dropdown-item" href="/signin">Авторизация</a></li>
+              <li><a class="dropdown-item" href="/signup">Регистрация</a></li>
             </ul>
           </li>
         </ul>
@@ -83,17 +85,36 @@
       </div>
     </div>
   </nav>
-    <br>
     <center>
-        <h4>Вы авторизовались!</h4>
-    </center>
+ <form action="/posts/add?page=1" method="post">
+    <label for="postContent">Введите ваш пост:</label>
     <br>
-    <center>
-        <img src="https://www.funnyart.club/uploads/posts/2023-02/1675522840_www-funnyart-club-p-kot-mem-kartinki-4.jpg" alt="Котик" width="300" height="200">
-    </center>
+    <textarea id="postContent" name="postContent" rows="4"></textarea>
     <br>
+    <button class="btn btn-success btn-lg mt-3">Отправить</button>   
+</form>
+  </center>
+  <br>
+   <center>
+    <h3>Лента постов:</h3>
+    <br>
+    {{if .}}
+    <ul>
+        {{range .}}
+            <li>
+                {{ .Content }}
+                Лайков: <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
+            </li>
+        {{end}}
+    </ul>
+    {{else}}
+        <p>Нет доступных постов.</p>
+    {{end}}
+    </ul>
+</center>
+<br>
 <center>
-    <a href="/" class="btn btn-success btn-lg mt-3">Перейти на главную страницу</a>
+  <a href="/" class="btn btn-success btn-lg mt-3">Перейти на главную страницу</a>
 </center>
 </body>
 </html>

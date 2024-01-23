@@ -38,11 +38,6 @@ func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
-	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
-	if err != nil {
-		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
-	}
-
 	if r.Method == "POST" {
 		h.Logger.Info("POST request to PostsHandler")
 		contentText := r.FormValue("postContent")
@@ -76,19 +71,33 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 		}
 
-		tmpl := h.PostService.ParseHtml("html/blog.tmpl", "blog")
+		tmpl := h.PostService.ParseHtml("html/blog.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
 		if err != nil {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
 		return
 	}
-
 	h.Logger.Info("GET request to PostsHandler")
-	tmpl := h.PostService.ParseHtml("html/blog.tmpl", "blog")
-	err = tmpl.Execute(w, postsLastTen)
+
+	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
 	if err != nil {
-		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
+	}
+
+	_, err = r.Cookie("session_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		tmpl := h.PostService.ParseHtml("html/blog_no_authorization.html", "blog")
+		err = tmpl.Execute(w, postsLastTen)
+		if err != nil {
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		}
+	} else {
+		tmpl := h.PostService.ParseHtml("html/blog.html", "blog")
+		err = tmpl.Execute(w, postsLastTen)
+		if err != nil {
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		}
 	}
 }
 
@@ -140,6 +149,7 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	var posts response.TemplateData
 	pageStr := r.URL.Query().Get("page")
+	_, err := r.Cookie("session_token")
 
 	page, offset := h.PostService.ParsePageAndCalculateOffset(pageStr)
 
@@ -151,10 +161,19 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
-	err := tmpl.Execute(w, posts)
-	if err != nil {
-		h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+	if errors.Is(err, http.ErrNoCookie) {
+		tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
+		err = tmpl.Execute(w, posts)
+		if err != nil {
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		}
+
+	} else {
+		tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
+		err = tmpl.Execute(w, posts)
+		if err != nil {
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		}
 	}
 }
 
