@@ -96,14 +96,16 @@
   </center>
   <br>
    <center>
-    <h3>Лента постов:</h3>
-    <br>
+    <h3 class="posts-title">Лента постов:</h3>
     {{if .}}
-    <ul>
+    <ul class="posts-list">
         {{range .}}
-            <li>
-                {{ .Content }}
-                Лайков: <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
+            <li class="post-item">
+              <div class="post-header">
+                <strong>{{ .UserName }}</strong> 
+              </div>
+                <div>{{ .Content }}</div>
+             <span id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
             </li>
         {{end}}
     </ul>
@@ -111,6 +113,26 @@
         <p>Нет доступных постов.</p>
     {{end}}
     </ul>
+    <style>
+      .posts-title {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .posts-list {
+      list-style-type: none; 
+      padding: 0; 
+      margin: 0; 
+    }
+    
+    .post-item {
+      padding: 10px;
+      background-color: #f8f8f8;
+      display: flex;
+      justify-content: space-between; 
+      align-items: center; 
+    }
+      </style>
 </center>
 <br>
 <center>

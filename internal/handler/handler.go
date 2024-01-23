@@ -155,10 +155,8 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if page == 1 {
 		posts = h.PostService.GenerateTemplateDataPostsRedis(page)
-
-	} else if page != 1 {
+	} else {
 		posts = h.PostService.GenerateTemplateDataPosts(page, offset)
-
 	}
 
 	if errors.Is(err, http.ErrNoCookie) {
