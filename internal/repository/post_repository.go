@@ -53,7 +53,7 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id "+
 		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content "+
-		"ORDER BY Users.DtCreate ASK "+
+		"ORDER BY Users.DtCreate ASC "+
 		"LIMIT ? OFFSET ?;", 10, offset)
 	if err != nil {
 		return nil
@@ -68,8 +68,8 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 		if err != nil {
 			return nil
 		}
-
-		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes})
+		var comm []response.Comments
+		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes, Comment: comm})
 	}
 	return posts
 }

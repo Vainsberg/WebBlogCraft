@@ -58,7 +58,39 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 		Liked_at DATETIME,
 		FOREIGN KEY (Users_id) REFERENCES Users(id),
 		FOREIGN KEY (Posts_id) REFERENCES Users_posts(id)
-	);`)
+	);
+`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Comments_like (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+		Users_id INT,
+		Comments_id INT,
+		Comment_like_at DATETIME,
+		FOREIGN KEY (Users_id) REFERENCES Users(id),
+		FOREIGN KEY (Comments_id) REFERENCES Comments(id)
+	);
+`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Comments (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+		Comment VARCHAR(255),
+		Users_id INT,
+		Posts_id INT,
+		Comment_at DATETIME,
+		FOREIGN KEY (Users_id) REFERENCES Users(id),
+		FOREIGN KEY (Posts_id) REFERENCES Users_posts(id)
+	);
+`)
 
 	if err != nil {
 		log.Fatal(err)

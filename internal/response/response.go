@@ -5,11 +5,18 @@ type PageData struct {
 	TotalPages  []int
 }
 
+type Comments struct {
+	Comment  string
+	UserName string
+	Like     string
+}
+
 type Posts struct {
 	Content  string
 	PostId   string
 	UserName string
 	Likes    int
+	Comment  []Comments
 }
 
 type TemplateData struct {
