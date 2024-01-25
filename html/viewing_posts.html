@@ -61,26 +61,27 @@
               </div>
               <p>Комментарии</p>
               {{if .Comment}}
-              {{range .Comment}}
-              <strong>{{ .UserName }}</strong> 
-               {{ .Comment }}
+                {{range .Comment}}
+                  <div class="comment">
+                    <strong>{{ .UserName }}</strong>: {{ .Comment }}
+                  </div>
+                {{end}}
+              {{else}}
+                <p>Нет комментариев.</p>
               {{end}}
-           {{else}}
-               <p>Нет комментариев.</p>
-          {{end}}
-          <form action="/signup" method="post">
-            <label for="comment">Введите комментарий </label>
-            <br>
-            <input type="comment" id="comment" name="comment" required>
-            <br>
-            <button class="btn btn-success btn-sm mt-3">Отправить</button>   
-           </form>
+              <form>
+                <label for="comment-{{ .PostId }}">Введите комментарий </label>
+                <br>
+                <input type="comment" id="comment-{{ .PostId }}" name="comment" required>
+                <br>
+                <a href="#" class="create-comment" post-id="{{ .PostId }}">Отправить</a> 
+              </form>
             </div>
           {{end}}
         {{else}}
           <p>Нет доступных постов.</p>
         {{end}}
-      </div>
+      </div>      
       <script>
         document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.like-button').forEach(button => {
@@ -110,6 +111,45 @@
     });
 });
       </script>
+   <script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.create-comment').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const postId = this.getAttribute('post-id');
+            const commentInput = document.getElementById('comment-' + postId);
+            const commentText = commentInput.value;
+            const commentsContainer = document.getElementById('comments-' + postId);
+            console.log(postId, commentText);
+
+            fetch(`/posts/${postId}/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ comment: commentText }) 
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); 
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                commentInput.value = ''; 
+
+                const newCommentDiv = document.createElement("div");
+                newCommentDiv.innerHTML = `<strong>${data.userName}</strong>: ${data.comment}`;
+                commentsContainer.appendChild(newCommentDiv);
+            })
+            .catch(error => {
+                console.error('Ошибка при добавлении комментария:', error);
+            });
+        });
+    });
+});
+
+   </script>
   <ul>
       <li>
           {{range .Pagination.TotalPages}}

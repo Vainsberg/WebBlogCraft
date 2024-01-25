@@ -19,6 +19,7 @@ type PostService struct {
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 	LikesRepository    *repository.RepositoryLikes
+	CommentsRepository *repository.RepositoryComments
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
 }
@@ -28,6 +29,7 @@ func NewPostService(logger *zap.Logger,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts,
 	LikesRepository *repository.RepositoryLikes,
+	CommentsRepository *repository.RepositoryComments,
 	ClientRedis *redis.RedisClient,
 	cache *cache.Cache) *PostService {
 	return &PostService{
@@ -36,6 +38,7 @@ func NewPostService(logger *zap.Logger,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
 		LikesRepository:    LikesRepository,
+		CommentsRepository: CommentsRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
 	}
@@ -185,4 +188,24 @@ func (post *PostService) ProcessLikeAction(cookie, postIDStr string) (int, error
 		post.ClearRedisCache()
 	}
 	return countLikes, nil
+}
+
+func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr, comment string) (string, error) {
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		return "", err
+	}
+
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+	post.CommentsRepository.AddCommentToPost(comment, userID, postID)
+
+	userName, err := post.UsersRepository.SearchUserName(userID)
+	if err != nil {
+		post.Logger.Error("SearchUserName error:", zap.Error(err))
+	}
+
+	return userName, nil
 }

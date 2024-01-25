@@ -49,10 +49,12 @@ func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
 }
 
 func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
-	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts "+
+	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName,Comments.Comment AS Comment, CommentUsers.UserName AS CommentUserName FROM Users_posts "+
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id "+
-		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content "+
+		"LEFT JOIN Comments ON Users_posts.Id = Comments.Posts_id "+
+		"LEFT JOIN Users AS CommentUsers ON  Comments.Users_id = CommentUsers.Id "+
+		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content, Comments.Comment, CommentUsers.UserName "+
 		"ORDER BY Users.DtCreate ASC "+
 		"LIMIT ? OFFSET ?;", 10, offset)
 	if err != nil {
@@ -63,13 +65,22 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
 	var posts []response.Posts
 	for rows.Next() {
 		var id, content, user string
+		var comment, userNameComment sql.NullString
 		var likes int
-		err := rows.Scan(&id, &content, &likes, &user)
+		err := rows.Scan(&id, &content, &likes, &user, &comment, &userNameComment)
 		if err != nil {
 			return nil
 		}
-		var comm []response.Comments
-		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes, Comment: comm})
+
+		var commentValue, userNameCommentValue string
+		if comment.Valid {
+			commentValue = comment.String
+		}
+		if userNameComment.Valid {
+			userNameCommentValue = userNameComment.String
+		}
+
+		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes, Comment: []response.Comments{response.Comments{Comment: commentValue, UserName: userNameCommentValue}}})
 	}
 	return posts
 }

@@ -9,13 +9,13 @@ type RepositoryComments struct {
 	db *sql.DB
 }
 
-func NewRepositoryComments(db *sql.DB) *RepositoryPosts {
-	return &RepositoryPosts{db: db}
+func NewRepositoryComments(db *sql.DB) *RepositoryComments {
+	return &RepositoryComments{db: db}
 }
 
-func (l *RepositoryLikes) AddCommentToPost(comment string, userID, postID int) error {
+func (l *RepositoryComments) AddCommentToPost(comment string, userID, postID int) error {
 	_, err := l.db.Exec(`
-        INSERT INTO Likes (Comment, Users_id, Posts_id, Comment_at)
+        INSERT INTO Comments (Comment, Users_id, Posts_id, Comment_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP());
     `, comment, userID, postID)
 

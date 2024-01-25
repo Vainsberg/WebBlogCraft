@@ -38,8 +38,9 @@ func main() {
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
 	repositoryLikes := repository.NewRepositoryLikes(db)
+	repositoryComments := repository.NewRepositoryComments(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryLikes, repositoryRedis, cache)
+	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryLikes, repositoryComments, repositoryRedis, cache)
 	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
@@ -49,6 +50,7 @@ func main() {
 	router.HandleFunc("/posts/list", handler.ViewingPostsHandler).Methods("GET", "POST")
 	router.HandleFunc("/posts/{postId}/like", handler.AddLikeToPostHandler).Methods("POST")
 	router.HandleFunc("/signout", handler.SignOutHandler).Methods("POST", "GET")
+	router.HandleFunc("/posts/{postId}/comment", handler.AddCommentToPostHandler).Methods("POST")
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 	})

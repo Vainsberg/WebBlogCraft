@@ -27,3 +27,12 @@ type TemplateData struct {
 type LikeResponse struct {
 	NewLikesCount int `json:"newLikesCount"`
 }
+
+type CommentInput struct {
+	Comment string `json:"comment"`
+}
+
+type CommentResponse struct {
+	Comment  string `json:"comment"`
+	UserName string `json:"userName"`
+}

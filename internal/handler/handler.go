@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
@@ -219,5 +220,51 @@ func (h *Handler) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, h.AuthService.DeleteSessionCookie())
 
 	fmt.Fprint(w, h.PostService.HtmlContent("html/signout.html"))
+
+}
+
+func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("AddCommentToPostHandler accessed")
+
+	cookie, err := r.Cookie("session_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		return
+	}
+	vars := mux.Vars(r)
+	postIdStr := vars["postId"]
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	var cmt response.CommentInput
+	err = json.Unmarshal(body, &cmt)
+	if err != nil {
+		http.Error(w, "Error unmarshalling JSON", http.StatusBadRequest)
+		return
+	}
+
+	username, err := h.PostService.AddUserCommentToPostAndSearchUserName(cookie.Value, postIdStr, cmt.Comment)
+	if err != nil {
+		http.Error(w, "Error AddUserCommentToPost", http.StatusInternalServerError)
+		return
+	}
+
+	response := response.CommentResponse{
+		Comment:  cmt.Comment,
+		UserName: username,
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 
 }

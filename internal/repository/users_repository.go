@@ -41,3 +41,12 @@ func (r *RepositoryUsers) CheckingPresenceUser(username string) (string, error) 
 	}
 	return searchUserName, nil
 }
+
+func (r *RepositoryUsers) SearchUserName(UserID int) (string, error) {
+	var searchUserName string
+	row := r.db.QueryRow("SELECT UserName FROM Users WHERE Id = ?;", UserID)
+	if err := row.Scan(&searchUserName); err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+	return searchUserName, nil
+}
