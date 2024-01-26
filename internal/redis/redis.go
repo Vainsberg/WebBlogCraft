@@ -17,7 +17,7 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 	return &RedisClient{Client: client}
 }
 
-func (r *RedisClient) AddToCache(searchContent []response.Posts, cachekey string) error {
+func (r *RedisClient) AddToCache(searchContent []response.Post, cachekey string) error {
 
 	jsonContent, err := json.Marshal(searchContent)
 	if err != nil {
@@ -41,8 +41,8 @@ func (r *RedisClient) ClearRedisCache() error {
 	return nil
 }
 
-func (r *RedisClient) GetRedisValue(cacheKey string) ([]response.Posts, error) {
-	var postRedis []response.Posts
+func (r *RedisClient) GetRedisValue(cacheKey string) ([]response.Post, error) {
+	var postRedis []response.Post
 
 	ctx := context.Background()
 

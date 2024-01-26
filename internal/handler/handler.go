@@ -100,6 +100,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
 	}
+
 }
 
 func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +149,7 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
-	var posts response.TemplateData
+	var posts response.ResponseData
 	pageStr := r.URL.Query().Get("page")
 	_, err := r.Cookie("session_token")
 
@@ -266,5 +267,34 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
+}
+
+func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("LikeToCommentHandler accessed")
+
+	cookie, err := r.Cookie("session_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		return
+	}
+
+	vars := mux.Vars(r)
+	commentIdStr := vars["commentId"]
+
+	updatedLikesCount, err := h.PostService.LikeActionToComment(cookie.Value, commentIdStr)
+
+	responseNewLikes := response.LikeResponse{
+		NewLikesCount: updatedLikesCount,
+	}
+
+	jsonResponseLikes, err := json.Marshal(responseNewLikes)
+	if err != nil {
+		h.Logger.Error("JSON marshaling error:", zap.Error(err))
+		http.Error(w, "JSON marshaling error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponseLikes)
 
 }

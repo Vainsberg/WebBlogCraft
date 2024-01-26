@@ -29,60 +29,49 @@ func (p *RepositoryPosts) AddContentAndUserId(UsersId int, content string) error
 	return nil
 }
 
-func (p *RepositoryPosts) ContentOutput() (*response.Posts, error) {
+func (p *RepositoryPosts) ContentOutput() (*response.Post, error) {
 	rows, err := p.db.Query("SELECT Content FROM Users_posts;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	Posts := &response.Posts{}
+	Post := &response.Post{}
 	for rows.Next() {
 		var item string
 		err := rows.Scan(&item)
 		if err != nil {
 			log.Fatal(err)
 		}
-		Posts.Content = item
+		Post.Content = item
 	}
-	return Posts, nil
+	return Post, nil
 }
 
-func (p *RepositoryPosts) CalculatePageOffset(offset int) []response.Posts {
-	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName,Comments.Comment AS Comment, CommentUsers.UserName AS CommentUserName FROM Users_posts "+
+func (p *RepositoryPosts) CalculatePageOffset(offset int) ([]response.Post, error) {
+	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts "+
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id "+
-		"LEFT JOIN Comments ON Users_posts.Id = Comments.Posts_id "+
-		"LEFT JOIN Users AS CommentUsers ON  Comments.Users_id = CommentUsers.Id "+
-		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content, Comments.Comment, CommentUsers.UserName "+
-		"ORDER BY Users.DtCreate ASC "+
+		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content "+
+		"ORDER BY Users.DtCreate DESC "+
 		"LIMIT ? OFFSET ?;", 10, offset)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []response.Posts
+	var posts []response.Post
 	for rows.Next() {
 		var id, content, user string
-		var comment, userNameComment sql.NullString
 		var likes int
-		err := rows.Scan(&id, &content, &likes, &user, &comment, &userNameComment)
+		err := rows.Scan(&id, &content, &likes, &user)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
-		var commentValue, userNameCommentValue string
-		if comment.Valid {
-			commentValue = comment.String
-		}
-		if userNameComment.Valid {
-			userNameCommentValue = userNameComment.String
-		}
-
-		posts = append(posts, response.Posts{Content: content, PostId: id, UserName: user, Likes: likes, Comment: []response.Comments{response.Comments{Comment: commentValue, UserName: userNameCommentValue}}})
+		posts = append(posts, response.Post{Content: content, PostId: id, UserName: user, Likes: likes})
 	}
-	return posts
+	return posts, nil
 }
 
 func (p *RepositoryPosts) CountPosts() (float64, error) {
@@ -95,19 +84,19 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 	return count, nil
 }
 
-func (p *RepositoryPosts) GetLastTenPosts() ([]response.Posts, error) {
+func (p *RepositoryPosts) GetLastTenPosts() ([]response.Post, error) {
 	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts " +
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id " +
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id " +
 		"GROUP BY Users_posts.Id,Users.UserName, Users_posts.Content " +
-		"ORDER BY Users.DtCreate DESC " +
+		"ORDER BY Users_posts.DtCreate DESC " +
 		"LIMIT 10;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []response.Posts
+	var posts []response.Post
 
 	for rows.Next() {
 		var id, content, user string
@@ -117,13 +106,13 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.Posts, error) {
 			return nil, err
 		}
 
-		post := response.Posts{Content: content, PostId: id, UserName: user, Likes: likes}
+		post := response.Post{Content: content, PostId: id, UserName: user, Likes: likes}
 		posts = append(posts, post)
 
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return posts, nil
 }

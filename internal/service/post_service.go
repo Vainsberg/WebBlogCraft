@@ -69,7 +69,7 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId int, content s
 	}
 }
 
-func (post *PostService) AddContentToRedis() []response.Posts {
+func (post *PostService) AddContentToRedis() []response.Post {
 	cachekey := "all_posts"
 
 	searchContentRedis, err := post.ClientRedis.GetRedisValue(cachekey)
@@ -109,23 +109,36 @@ func (post *PostService) SearchCountPage(page int) response.PageData {
 	return PageList
 }
 
-func (post *PostService) GenerateTemplateDataPosts(page, offset int) response.TemplateData {
+func (post *PostService) GenerateTemplateDataPosts(page, offset int) response.ResponseData {
 	countPage := post.SearchCountPage(page)
-	offsetPosts := post.PostsRepository.CalculatePageOffset(offset)
+	offsetPosts, err := post.PostsRepository.CalculatePageOffset(offset)
+	if err != nil {
+		post.Logger.Error("CalculatePageOffset error: ", zap.Error(err))
+	}
 
-	data := response.TemplateData{
-		Posts:      offsetPosts,
+	posts, err := post.GetPostsWithComments(offsetPosts)
+	if err != nil {
+		post.Logger.Error("GetPostsWithComments error: ", zap.Error(err))
+	}
+
+	data := response.ResponseData{
+		Posts:      posts,
 		Pagination: countPage,
 	}
 	return data
 }
 
-func (post *PostService) GenerateTemplateDataPostsRedis(page int) response.TemplateData {
+func (post *PostService) GenerateTemplateDataPostsRedis(page int) response.ResponseData {
 	countPage := post.SearchCountPage(page)
 	postsRedis := post.AddContentToRedis()
 
-	data := response.TemplateData{
-		Posts:      postsRedis,
+	posts, err := post.GetPostsWithComments(postsRedis)
+	if err != nil {
+		post.Logger.Error("GetPostsWithComments error: ", zap.Error(err))
+	}
+
+	data := response.ResponseData{
+		Posts:      posts,
 		Pagination: countPage,
 	}
 	return data
@@ -208,4 +221,50 @@ func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr
 	}
 
 	return userName, nil
+}
+
+func (post *PostService) GetPostsWithComments(offsetPosts []response.Post) ([]response.Post, error) {
+	var posts []response.Post
+	var err error
+	for _, p := range offsetPosts {
+		p.Comments, err = post.CommentsRepository.GetComments(p.PostId)
+		if err != nil {
+			post.Logger.Error("GetComments error: ", zap.Error(err))
+		}
+		posts = append(posts, p)
+	}
+	return posts, nil
+}
+
+func (post *PostService) LikeActionToComment(cookie, commentIDStr string) (int, error) {
+	commentID, err := strconv.Atoi(commentIDStr)
+	if err != nil {
+		return 0, err
+	}
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	chekingLikeToComments, err := post.CommentsRepository.CheckingLikesToComment(userID, commentID)
+	if err != nil {
+		post.Logger.Error("CheckingLikesToComment error:", zap.Error(err))
+	}
+
+	if !chekingLikeToComments {
+		err := post.CommentsRepository.AddLikesToComments(userID, commentID)
+		if err != nil {
+			post.Logger.Error("AddLikesToComments error:", zap.Error(err))
+		}
+	} else {
+		err = post.CommentsRepository.RemoveLikeFromComments(userID, commentID)
+		if err != nil {
+			post.Logger.Error("RemoveLikeFromPost error:", zap.Error(err))
+		}
+	}
+	countLikes, err := post.CommentsRepository.CountLikesComments(commentID)
+	if err != nil {
+		post.Logger.Error("CountLikes error:", zap.Error(err))
+	}
+	return countLikes, nil
 }

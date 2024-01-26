@@ -51,12 +51,14 @@ func main() {
 	router.HandleFunc("/posts/{postId}/like", handler.AddLikeToPostHandler).Methods("POST")
 	router.HandleFunc("/signout", handler.SignOutHandler).Methods("POST", "GET")
 	router.HandleFunc("/posts/{postId}/comment", handler.AddCommentToPostHandler).Methods("POST")
+	router.HandleFunc("/posts/{commentId}/comment/like", handler.LikeToCommentHandler).Methods("POST")
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 	})
-	router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	fmt.Println("Starting server at", cfg.Addr)
 
 	httpserver.NewHttpServer(router)
+
 }
