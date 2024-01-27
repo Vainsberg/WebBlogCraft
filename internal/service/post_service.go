@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/dto"
 	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
@@ -69,7 +70,7 @@ func (post *PostService) PublishPostWithSessionUser(searchUsersId int, content s
 	}
 }
 
-func (post *PostService) AddContentToRedis() []response.Post {
+func (post *PostService) AddContentToRedis() []dto.PostDto {
 	cachekey := "all_posts"
 
 	searchContentRedis, err := post.ClientRedis.GetRedisValue(cachekey)
@@ -223,15 +224,22 @@ func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr
 	return userName, nil
 }
 
-func (post *PostService) GetPostsWithComments(offsetPosts []response.Post) ([]response.Post, error) {
+func (post *PostService) GetPostsWithComments(offsetPosts []dto.PostDto) ([]response.Post, error) {
 	var posts []response.Post
-	var err error
+
 	for _, p := range offsetPosts {
-		p.Comments, err = post.CommentsRepository.GetComments(p.PostId)
+		Comments, err := post.CommentsRepository.GetComments(p.PostId)
 		if err != nil {
 			post.Logger.Error("GetComments error: ", zap.Error(err))
 		}
-		posts = append(posts, p)
+		data := response.Post{
+			Content:  p.Content,
+			PostId:   p.PostId,
+			UserName: p.UserName,
+			Likes:    p.Likes,
+			Comments: Comments,
+		}
+		posts = append(posts, data)
 	}
 	return posts, nil
 }

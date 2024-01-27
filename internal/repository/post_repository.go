@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/dto"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 )
 
@@ -48,7 +49,7 @@ func (p *RepositoryPosts) ContentOutput() (*response.Post, error) {
 	return Post, nil
 }
 
-func (p *RepositoryPosts) CalculatePageOffset(offset int) ([]response.Post, error) {
+func (p *RepositoryPosts) CalculatePageOffset(offset int) ([]dto.PostDto, error) {
 	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts "+
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id "+
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id "+
@@ -60,7 +61,7 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) ([]response.Post, erro
 	}
 	defer rows.Close()
 
-	var posts []response.Post
+	var posts []dto.PostDto
 	for rows.Next() {
 		var id, content, user string
 		var likes int
@@ -69,7 +70,7 @@ func (p *RepositoryPosts) CalculatePageOffset(offset int) ([]response.Post, erro
 			return nil, err
 		}
 
-		posts = append(posts, response.Post{Content: content, PostId: id, UserName: user, Likes: likes})
+		posts = append(posts, dto.PostDto{Content: content, PostId: id, UserName: user, Likes: likes})
 	}
 	return posts, nil
 }
@@ -84,7 +85,7 @@ func (p *RepositoryPosts) CountPosts() (float64, error) {
 	return count, nil
 }
 
-func (p *RepositoryPosts) GetLastTenPosts() ([]response.Post, error) {
+func (p *RepositoryPosts) GetLastTenPosts() ([]dto.PostDto, error) {
 	rows, err := p.db.Query("SELECT Users_posts.Id,Users_posts.Content,COUNT(Likes.Id),Users.UserName FROM Users_posts " +
 		"LEFT JOIN Likes ON Users_posts.Id = Likes.Posts_id " +
 		"LEFT JOIN Users ON Users_posts.Users_id = Users.Id " +
@@ -96,7 +97,7 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []response.Post
+	var posts []dto.PostDto
 
 	for rows.Next() {
 		var id, content, user string
@@ -106,7 +107,7 @@ func (p *RepositoryPosts) GetLastTenPosts() ([]response.Post, error) {
 			return nil, err
 		}
 
-		post := response.Post{Content: content, PostId: id, UserName: user, Likes: likes}
+		post := dto.PostDto{Content: content, PostId: id, UserName: user, Likes: likes}
 		posts = append(posts, post)
 
 	}

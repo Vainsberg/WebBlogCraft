@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Vainsberg/WebBlogCraft/internal/response"
+	"github.com/Vainsberg/WebBlogCraft/internal/dto"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -17,7 +17,7 @@ func NewRepositoryRedis(client *redis.Client) *RedisClient {
 	return &RedisClient{Client: client}
 }
 
-func (r *RedisClient) AddToCache(searchContent []response.Post, cachekey string) error {
+func (r *RedisClient) AddToCache(searchContent []dto.PostDto, cachekey string) error {
 
 	jsonContent, err := json.Marshal(searchContent)
 	if err != nil {
@@ -41,8 +41,8 @@ func (r *RedisClient) ClearRedisCache() error {
 	return nil
 }
 
-func (r *RedisClient) GetRedisValue(cacheKey string) ([]response.Post, error) {
-	var postRedis []response.Post
+func (r *RedisClient) GetRedisValue(cacheKey string) ([]dto.PostDto, error) {
+	var postRedis []dto.PostDto
 
 	ctx := context.Background()
 
