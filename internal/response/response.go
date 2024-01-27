@@ -9,7 +9,7 @@ type Comment struct {
 	CommentId string
 	Comment   string
 	UserName  string
-	Likes     string
+	Likes     int
 }
 
 type Post struct {

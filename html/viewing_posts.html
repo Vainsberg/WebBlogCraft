@@ -61,10 +61,12 @@
               </div>
               <p>Комментарии</p>
               {{$postId := .PostId}}
+              <div class="comments-container" id="comments-container-{{ $postId }}"></div>
               {{if .Comments}}
                 {{range .Comments}}
                   <div class="comment-count-{{ $postId }}" id="comment-count-{{ $postId }}">
                     <strong>{{ .UserName }}</strong>: {{ .Comment }}
+                
                     <a href="#" class="like-button-comment" comment-id="{{ .CommentId }}">Лайк</a>
                     <span class="likes-count-comment" id="likes-count-comment-{{ .CommentId }}">{{ .Likes }}</span>
                   </div>
@@ -120,9 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             const postId = this.getAttribute('post-id');
+
             const commentInput = document.getElementById('comment-' + postId);
+
             const commentText = commentInput.value;
-            const commentsContainer = document.getElementById('comment-count-' + postId);
+ 
+       const commentsContainer = document.getElementById('comments-container-' + postId);
+
+
+        
+
             console.log(postId, commentText);
 
             fetch(`/posts/${postId}/comment`, {
@@ -135,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => {
                 if (response.ok) {
                     return response.json(); 
+                    console.log(data)
                 }
                 throw new Error('Network response was not ok.');
             })
@@ -158,12 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             const commentId = this.getAttribute('comment-id');
-            const likesCountElement = document.getElementById('likes-count-comment' + commentId);
+            const likesCountElement = document.getElementById('likes-count-comment-' + commentId);
             console.log(commentId);
             fetch(`/posts/${commentId}/comment/like`, {
                 method: 'POST',
             })
             .then(response => {
+              console.log('Ответ сервера:', response);
                 if (response.ok) {
                     return response.json(); 
                 }
@@ -171,7 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 if (likesCountElement) {
+                  console.log('Обновленное количество лайков:', data.newLikesCount);
                     likesCountElement.textContent = data.newLikesCount;
+                } else {
+                  console.error('Element for updating likes count not found');
                 }
             })
             .catch(error => {

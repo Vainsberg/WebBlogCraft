@@ -29,11 +29,14 @@ func (l *RepositoryComments) AddCommentToPost(comment string, userID, postID int
 }
 
 func (l *RepositoryComments) GetComments(postID string) ([]response.Comment, error) {
-	rows, err := l.db.Query("SELECT Comments.Id, Comments.Comment, Users.UserName FROM Comments "+
-		"LEFT JOIN Users ON Users.Id = Comments.Users_id "+
-		"WHERE Comments.Posts_id = ? "+
-		"GROUP BY Comments.Id, Users.UserName, Comments.Comment "+
-		"ORDER BY Comments.Comment_at DESC;", postID)
+	rows, err := l.db.Query(`
+	SELECT Comments.Id, Comments.Comment, Users.UserName, COUNT(Comments_like.Id) AS LikesCount
+	FROM Comments
+	LEFT JOIN Users ON Users.Id = Comments.Users_id
+	LEFT JOIN Comments_like ON Comments_like.Comments_id = Comments.Id
+	WHERE Comments.Posts_id = ?
+	GROUP BY Comments.Id, Users.UserName, Comments.Comment
+	ORDER BY Comments.Comment_at DESC;`, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +45,13 @@ func (l *RepositoryComments) GetComments(postID string) ([]response.Comment, err
 	var comments []response.Comment
 	for rows.Next() {
 		var id, comment, UsersName string
-		err := rows.Scan(&id, &comment, &UsersName)
+		var like int
+
+		err := rows.Scan(&id, &comment, &UsersName, &like)
 		if err != nil {
 			return nil, err
 		}
-		comments = append(comments, response.Comment{Comment: comment, UserName: UsersName, CommentId: id})
+		comments = append(comments, response.Comment{Comment: comment, UserName: UsersName, CommentId: id, Likes: like})
 	}
 	return comments, nil
 }
