@@ -248,16 +248,17 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	username, err := h.PostService.AddUserCommentToPostAndSearchUserName(cookie.Value, postIdStr, cmt.Comment)
+	commentId, username, err := h.PostService.AddUserCommentToPostAndSearchUserName(cookie.Value, postIdStr, cmt.Comment)
 	if err != nil {
 		http.Error(w, "Error AddUserCommentToPost", http.StatusInternalServerError)
 		return
 	}
 
 	response := response.CommentResponse{
-		Comment:  cmt.Comment,
-		UserName: username,
-		Likes:    0,
+		CommentID: commentId,
+		Comment:   cmt.Comment,
+		UserName:  username,
+		Likes:     0,
 	}
 
 	jsonResponse, err := json.Marshal(response)

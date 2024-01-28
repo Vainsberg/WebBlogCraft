@@ -34,7 +34,8 @@ type CommentInput struct {
 }
 
 type CommentResponse struct {
-	Comment  string `json:"comment"`
-	UserName string `json:"userName"`
-	Likes    int    `json:"likes"`
+	CommentID int    `json:"commentId"`
+	Comment   string `json:"comment"`
+	UserName  string `json:"userName"`
+	Likes     int    `json:"likes"`
 }

@@ -101,3 +101,13 @@ func (l *RepositoryComments) CountLikesComments(commentsID int) (int, error) {
 	}
 	return count, nil
 }
+
+func (l *RepositoryComments) SearchCommentId(comment string) (int, error) {
+	var commentId int
+
+	err := l.db.QueryRow("SELECT Id FROM Comments WHERE Comment = ?", comment).Scan(&commentId)
+	if err != nil {
+		return 0, err
+	}
+	return commentId, nil
+}

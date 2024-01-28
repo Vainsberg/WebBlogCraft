@@ -204,10 +204,10 @@ func (post *PostService) ProcessLikeAction(cookie, postIDStr string) (int, error
 	return countLikes, nil
 }
 
-func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr, comment string) (string, error) {
+func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr, comment string) (int, string, error) {
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 
 	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
@@ -221,7 +221,12 @@ func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr
 		post.Logger.Error("SearchUserName error:", zap.Error(err))
 	}
 
-	return userName, nil
+	commentId, err := post.CommentsRepository.SearchCommentId(comment)
+	if err != nil {
+		post.Logger.Error("SearchCommentId error:", zap.Error(err))
+	}
+
+	return commentId, userName, nil
 }
 
 func (post *PostService) GetPostsWithComments(offsetPosts []dto.PostDto) ([]response.Post, error) {
