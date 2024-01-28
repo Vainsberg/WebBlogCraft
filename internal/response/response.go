@@ -36,4 +36,5 @@ type CommentInput struct {
 type CommentResponse struct {
 	Comment  string `json:"comment"`
 	UserName string `json:"userName"`
+	Likes    int    `json:"likes"`
 }

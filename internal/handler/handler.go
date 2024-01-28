@@ -162,7 +162,7 @@ func (h *Handler) ViewingPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errors.Is(err, http.ErrNoCookie) {
-		tmpl := h.PostService.ParseHtml("html/viewing_posts.html", "viewing_posts")
+		tmpl := h.PostService.ParseHtml("html/viewing_posts_no_auth.html", "viewing_posts")
 		err = tmpl.Execute(w, posts)
 		if err != nil {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
@@ -229,7 +229,7 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
-		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		fmt.Fprint(w, h.PostService.HtmlContent("html/signin.html"))
 		return
 	}
 	vars := mux.Vars(r)
@@ -257,6 +257,7 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	response := response.CommentResponse{
 		Comment:  cmt.Comment,
 		UserName: username,
+		Likes:    0,
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -296,5 +297,4 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponseLikes)
-
 }

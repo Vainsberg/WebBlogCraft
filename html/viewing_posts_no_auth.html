@@ -50,6 +50,9 @@
         {{if .Posts}}
           {{range .Posts}}
             <div class="post">
+              <div class="post-header">
+                <strong>{{ .UserName }}</strong> 
+              </div>
               <div class="post-body">
                 {{ .Content }}
               </div>
@@ -57,41 +60,144 @@
                 <a href="#" class="like-button" post-id="{{ .PostId }}">Лайк</a>
                 <span class="likes-count" id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
               </div>
+              <p>Комментарии</p>
+              {{$postId := .PostId}}
+              <div class="comments-container" id="comments-container-{{ $postId }}"></div>
+              {{if .Comments}}
+                {{range .Comments}}
+                  <div class="comment-count-{{ $postId }}" id="comment-count-{{ $postId }}">
+                    <strong>{{ .UserName }}</strong>: {{ .Comment }}
+                
+                    <a href="#" class="like-button-comment" comment-id="{{ .CommentId }}">Лайк</a>
+                    <span class="likes-count-comment" id="likes-count-comment-{{ .CommentId }}">{{ .Likes }}</span>
+                  </div>
+                {{end}}
+              {{else}}
+                <p>Нет комментариев.</p>
+              {{end}}
+              <form>
+                <label for="comment-{{ .PostId }}">Введите комментарий </label>
+                <br>
+                <input type="comment" id="comment-{{ .PostId }}" name="comment" required>
+                <br>
+                <a href="#" class="create-comment" post-id="{{ .PostId }}">Отправить</a> 
+              </form>
             </div>
           {{end}}
         {{else}}
           <p>Нет доступных постов.</p>
         {{end}}
-      </div>
-  <script>
-      document.addEventListener('DOMContentLoaded', () => {
-          document.querySelectorAll('.like-button').forEach(button => {
-              button.addEventListener('click', function(event) {
-                  event.preventDefault();
-                  const postId = this.getAttribute('post-id');
-                  const likesCountElement = document.getElementById('likes-count-' + postId);
-                  console.log(postId);
-                  fetch(`/posts/${postId}/like`, {
-                      method: 'POST',
-                  })
-                  .then(response => {
-                      if (response.ok) {
-                          return response.json(); 
-                      }
-                      throw new Error('Network response was not ok.');
-                  })
-                  .then(data => {
-                      if (likesCountElement) {
-                          likesCountElement.textContent = data.newLikesCount;
-                      }
-                  })
-                  .catch(error => {
-                      console.error('Ошибка при добавлении лайка:', error);
-                  });
-              });
-          });
-      });
-  </script>
+      </div>      
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.like-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const postId = this.getAttribute('post-id');
+            const likesCountElement = document.getElementById('likes-count-' + postId);
+            console.log(postId);
+            fetch(`/posts/${postId}/like`, {
+                method: 'POST',
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); 
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                if (likesCountElement) {
+                    likesCountElement.textContent = data.newLikesCount;
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при добавлении лайка:', error);
+            });
+        });
+    });
+});
+      </script>
+   <script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.create-comment').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const postId = this.getAttribute('post-id');
+
+            const commentInput = document.getElementById('comment-' + postId);
+
+            const commentText = commentInput.value;
+ 
+       const commentsContainer = document.getElementById('comments-container-' + postId);
+
+
+        
+
+            console.log(postId, commentText);
+
+            fetch(`/posts/${postId}/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ comment: commentText }) 
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); 
+                    console.log(data)
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+              
+                commentInput.value = ''; 
+
+                const newCommentDiv = document.createElement("div");
+  
+                newCommentDiv.innerHTML = `<strong>${data.userName}</strong>: ${data.comment} <span>Лайки: ${data.likes || 0}</span>`;
+               commentsContainer.appendChild(newCommentDiv);
+            })
+            .catch(error => {
+                console.error('Ошибка при добавлении комментария:', error);
+            });
+        });
+    });
+});
+   </script>
+         <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.like-button-comment').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const commentId = this.getAttribute('comment-id');
+            const likesCountElement = document.getElementById('likes-count-comment-' + commentId);
+            console.log(commentId);
+            fetch(`/posts/${commentId}/comment/like`, {
+                method: 'POST',
+            })
+            .then(response => {
+              console.log('Ответ сервера:', response);
+                if (response.ok) {
+                    return response.json(); 
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                if (likesCountElement) {
+                  console.log('Обновленное количество лайков:', data.newLikesCount);
+                    likesCountElement.textContent = data.newLikesCount;
+                } else {
+                  console.error('Element for updating likes count not found');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при добавлении лайка:', error);
+            });
+        });
+    });
+});
+      </script>
   <ul>
       <li>
           {{range .Pagination.TotalPages}}
