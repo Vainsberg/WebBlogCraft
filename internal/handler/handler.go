@@ -182,7 +182,13 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
-		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		w.WriteHeader(http.StatusUnauthorized)
+		response := response.LikeResponse{
+			IsAuthenticated: false,
+		}
+		jsonResponse, _ := json.Marshal(response)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
 		return
 	}
 
@@ -197,7 +203,8 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseNewLikes := response.LikeResponse{
-		NewLikesCount: updatedLikesCount,
+		IsAuthenticated: true,
+		NewLikesCount:   updatedLikesCount,
 	}
 
 	jsonResponseLikes, err := json.Marshal(responseNewLikes)
@@ -229,9 +236,16 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
-		fmt.Fprint(w, h.PostService.HtmlContent("html/signin.html"))
+		w.WriteHeader(http.StatusUnauthorized)
+		response := response.CommentResponse{
+			IsAuthenticated: false,
+		}
+		jsonResponse, _ := json.Marshal(response)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
 		return
 	}
+
 	vars := mux.Vars(r)
 	postIdStr := vars["postId"]
 
@@ -255,10 +269,11 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	response := response.CommentResponse{
-		CommentID: commentId,
-		Comment:   cmt.Comment,
-		UserName:  username,
-		Likes:     0,
+		IsAuthenticated: true,
+		CommentID:       commentId,
+		Comment:         cmt.Comment,
+		UserName:        username,
+		Likes:           0,
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -276,7 +291,13 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
-		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		w.WriteHeader(http.StatusUnauthorized)
+		response := response.LikeResponse{
+			IsAuthenticated: false,
+		}
+		jsonResponse, _ := json.Marshal(response)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
 		return
 	}
 
@@ -286,7 +307,8 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 	updatedLikesCount, err := h.PostService.LikeActionToComment(cookie.Value, commentIdStr)
 
 	responseNewLikes := response.LikeResponse{
-		NewLikesCount: updatedLikesCount,
+		IsAuthenticated: true,
+		NewLikesCount:   updatedLikesCount,
 	}
 
 	jsonResponseLikes, err := json.Marshal(responseNewLikes)

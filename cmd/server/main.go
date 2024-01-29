@@ -51,7 +51,7 @@ func main() {
 	router.HandleFunc("/posts/{postId}/like", handler.AddLikeToPostHandler).Methods("POST")
 	router.HandleFunc("/signout", handler.SignOutHandler).Methods("POST", "GET")
 	router.HandleFunc("/posts/{postId}/comment", handler.AddCommentToPostHandler).Methods("POST")
-	router.HandleFunc("/posts/{commentId}/comment/like", handler.LikeToCommentHandler).Methods("POST", "GET")
+	router.HandleFunc("/posts/{commentId}/comment/like", handler.LikeToCommentHandler).Methods("GET")
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 	})

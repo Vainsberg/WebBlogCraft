@@ -26,7 +26,8 @@ type ResponseData struct {
 }
 
 type LikeResponse struct {
-	NewLikesCount int `json:"newLikesCount"`
+	IsAuthenticated bool `json:"isAuthenticated"`
+	NewLikesCount   int  `json:"newLikesCount"`
 }
 
 type CommentInput struct {
@@ -34,8 +35,9 @@ type CommentInput struct {
 }
 
 type CommentResponse struct {
-	CommentID int    `json:"commentId"`
-	Comment   string `json:"comment"`
-	UserName  string `json:"userName"`
-	Likes     int    `json:"likes"`
+	IsAuthenticated bool   `json:"isAuthenticated"`
+	CommentID       int    `json:"commentId"`
+	Comment         string `json:"comment"`
+	UserName        string `json:"userName"`
+	Likes           int    `json:"likes"`
 }
