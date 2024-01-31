@@ -14,9 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
           })
           .then(response => response.json())
           .then(data => {
-            if (!data.isAuthenticated) {
-                alert('Вы не авторизованы! Пожалуйста, войдите в систему.');
-            }
               commentInput.value = ''; 
               const newCommentDiv = document.createElement("div");
               newCommentDiv.innerHTML = `
@@ -35,18 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
                       method: 'GET',
                   })
                   .then(response => response.json())
-                  .then(data => {
-                    if (!data.isAuthenticated) {
-                        alert('Вы не авторизованы! Пожалуйста, войдите в систему.');
-                    }
+                     .then(data => {
                       if (likesCountElement) {
                           likesCountElement.textContent = data.newLikesCount;
                       }
                   })
-                  .catch(error => console.error('Ошибка при добавлении лайка:', error));
+                  .catch(error => {
+                    window.location.href = "/signin";
+                    console.error('Ошибка при добавлении лайка:', error);
+                });
               });
           })
-          .catch(error => console.error('Ошибка при добавлении комментария:', error));
+          .catch(error => {
+            window.location.href = "/signin";
+            console.error('Ошибка при добавлении комментария:', error);
+        });
       });
     });
   });

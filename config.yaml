@@ -6,5 +6,6 @@ DbHost: '127.0.0.1'
 RedisAddr: 'localhost:6379'
 RedisPass: ''
 RedisDb: 0
+rabbitMQURL: "amqp://guest:guest@localhost:5672/"
 
 

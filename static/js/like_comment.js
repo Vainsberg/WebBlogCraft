@@ -15,15 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 throw new Error('Network response was not ok.');
             })
+
             .then(data => {
-                if (!data.isAuthenticated) {
-                    alert('Вы не авторизованы! Пожалуйста, войдите в систему.');
-                } 
                 if (likesCountElement) {
                     likesCountElement.textContent = data.newLikesCount;
                 }
             })
             .catch(error => {
+                window.location.href = "/signin";
                 console.error('Ошибка при добавлении лайка:', error);
             });
         });

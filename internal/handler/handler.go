@@ -183,12 +183,6 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		w.WriteHeader(http.StatusUnauthorized)
-		response := response.LikeResponse{
-			IsAuthenticated: false,
-		}
-		jsonResponse, _ := json.Marshal(response)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
 		return
 	}
 
@@ -203,8 +197,7 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseNewLikes := response.LikeResponse{
-		IsAuthenticated: true,
-		NewLikesCount:   updatedLikesCount,
+		NewLikesCount: updatedLikesCount,
 	}
 
 	jsonResponseLikes, err := json.Marshal(responseNewLikes)
@@ -237,12 +230,6 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		w.WriteHeader(http.StatusUnauthorized)
-		response := response.CommentResponse{
-			IsAuthenticated: false,
-		}
-		jsonResponse, _ := json.Marshal(response)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
 		return
 	}
 
@@ -269,11 +256,10 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	response := response.CommentResponse{
-		IsAuthenticated: true,
-		CommentID:       commentId,
-		Comment:         cmt.Comment,
-		UserName:        username,
-		Likes:           0,
+		CommentID: commentId,
+		Comment:   cmt.Comment,
+		UserName:  username,
+		Likes:     0,
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -292,12 +278,6 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		w.WriteHeader(http.StatusUnauthorized)
-		response := response.LikeResponse{
-			IsAuthenticated: false,
-		}
-		jsonResponse, _ := json.Marshal(response)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
 		return
 	}
 
@@ -307,8 +287,7 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 	updatedLikesCount, err := h.PostService.LikeActionToComment(cookie.Value, commentIdStr)
 
 	responseNewLikes := response.LikeResponse{
-		IsAuthenticated: true,
-		NewLikesCount:   updatedLikesCount,
+		NewLikesCount: updatedLikesCount,
 	}
 
 	jsonResponseLikes, err := json.Marshal(responseNewLikes)
