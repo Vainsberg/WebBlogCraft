@@ -20,9 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(error => {
-    
                     window.location.href = "/signin";
-                
                 console.error('Ошибка при добавлении лайка:', error);
             });
         });

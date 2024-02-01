@@ -21,6 +21,7 @@ type PostService struct {
 	PostsRepository    *repository.RepositoryPosts
 	LikesRepository    *repository.RepositoryLikes
 	CommentsRepository *repository.RepositoryComments
+	EmailRepository    *repository.RepositoryEmail
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
 }
@@ -31,6 +32,7 @@ func NewPostService(logger *zap.Logger,
 	PostsRepository *repository.RepositoryPosts,
 	LikesRepository *repository.RepositoryLikes,
 	CommentsRepository *repository.RepositoryComments,
+	EmailRepository *repository.RepositoryEmail,
 	ClientRedis *redis.RedisClient,
 	cache *cache.Cache) *PostService {
 	return &PostService{
@@ -40,6 +42,7 @@ func NewPostService(logger *zap.Logger,
 		PostsRepository:    PostsRepository,
 		LikesRepository:    LikesRepository,
 		CommentsRepository: CommentsRepository,
+		EmailRepository:    EmailRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
 	}
@@ -280,4 +283,34 @@ func (post *PostService) LikeActionToComment(cookie, commentIDStr string) (int, 
 		post.Logger.Error("CountLikes error:", zap.Error(err))
 	}
 	return countLikes, nil
+}
+
+func (post *PostService) AddEmailInDB(cookie, email string) {
+
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+	post.EmailRepository.AddEmailAndUserId(userID, cookie)
+}
+
+func (post *PostService) AddCodeToRedis(code int) dto.EmailCode {
+	cachekey := "email"
+
+	searchCode, err := post.ClientRedis.GetRedisCode(cachekey)
+	if err == nil {
+		return searchCode
+	}
+
+	err = post.ClientRedis.AddToCacheCode(code, cachekey)
+	if err != nil {
+		post.Logger.Error("AddToCache error: ", zap.Error(err))
+	}
+
+	searchCode, err = post.ClientRedis.GetRedisCode(cachekey)
+	if err != nil {
+		post.Logger.Error("GetRedisValue error: ", zap.Error(err))
+	}
+
+	return searchCode
 }

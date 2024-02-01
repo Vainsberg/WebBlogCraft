@@ -14,3 +14,7 @@ type PostDto struct {
 	Likes    int
 	Comments []CommentDto
 }
+
+type EmailCode struct {
+	Code string
+}

@@ -39,3 +39,8 @@ type CommentResponse struct {
 	UserName  string `json:"userName"`
 	Likes     int    `json:"likes"`
 }
+
+type RabbitMQMessage struct {
+	Code  string
+	Email string
+}

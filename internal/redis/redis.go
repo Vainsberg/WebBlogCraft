@@ -60,3 +60,34 @@ func (r *RedisClient) GetRedisValue(cacheKey string) ([]dto.PostDto, error) {
 
 	return postRedis, nil
 }
+func (r *RedisClient) AddToCacheCode(code int, cachekey string) error {
+
+	jsonContent, err := json.Marshal(code)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = r.Client.Set(context.Background(), cachekey, jsonContent, 0).Err()
+	if err != nil {
+		return err
+
+	}
+	return nil
+}
+func (r *RedisClient) GetRedisCode(cacheKey string) (dto.EmailCode, error) {
+	var emailCode dto.EmailCode
+
+	ctx := context.Background()
+
+	value, err := r.Client.Get(ctx, cacheKey).Result()
+	if err == redis.Nil {
+		return dto.EmailCode{}, err
+	} else if err != nil {
+
+		err = json.Unmarshal([]byte(value), &emailCode)
+		if err != nil {
+			return dto.EmailCode{}, err
+		}
+	}
+	return emailCode, nil
+}

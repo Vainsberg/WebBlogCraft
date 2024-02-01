@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
 	"github.com/gorilla/mux"
@@ -299,4 +300,26 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponseLikes)
+}
+
+func (h *Handler) EmailVerificationsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		c, err := r.Cookie("session_token")
+		if errors.Is(err, http.ErrNoCookie) {
+			return
+		}
+		email := r.FormValue("email")
+		h.PostService.AddEmailInDB(c.Value, email)
+
+		code := pkg.GenerateSixDigitCode()
+		searchCode := h.PostService.AddCodeToRedis(code)
+
+		message := response.RabbitMQMessage{
+			Code:  searchCode.Code,
+			Email: email,
+		}
+
+	}
+
+	fmt.Fprint(w, h.PostService.HtmlContent("html/email_verification.html"))
 }

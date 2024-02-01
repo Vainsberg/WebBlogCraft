@@ -96,5 +96,19 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 		log.Fatal(err)
 	}
 
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS EmailVerifications (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+		Users_id INT,
+		email VARCHAR(255),
+		is_email_verified BOOLEAN,
+		FOREIGN KEY (Users_id) REFERENCES Users(id)
+	);
+`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return db
 }
