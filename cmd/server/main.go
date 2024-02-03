@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	config "github.com/Vainsberg/WebBlogCraft/internal/config"
 	"github.com/Vainsberg/WebBlogCraft/internal/db"
 	"github.com/Vainsberg/WebBlogCraft/internal/handler"
 	httpserver "github.com/Vainsberg/WebBlogCraft/internal/httpServer"
+	"github.com/Vainsberg/WebBlogCraft/internal/rabbitmq"
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/service"
@@ -34,6 +36,16 @@ func main() {
 		panic("Error create logger")
 	}
 
+	conn, err := rabbitmq.ConnectToRabbitMQ(*cfg)
+	if err != nil {
+		panic("Error create connection Rabbit MQ")
+	}
+
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("failed to open channel. Error: %s", err)
+	}
+
 	repositoryUsers := repository.NewRepositoryUsers(db)
 	repositorySessions := repository.NewRepositorySessions(db)
 	repositoryPosts := repository.NewRepositoryPosts(db)
@@ -41,7 +53,8 @@ func main() {
 	repositoryComments := repository.NewRepositoryComments(db)
 	repositoryEmail := repository.NewRepositoryEmail(db)
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
-	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryLikes, repositoryComments, repositoryEmail, repositoryRedis, cache)
+	repositoryRabbitMQ := rabbitmq.NewRepositoryRabbitMQ(ch, conn)
+	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryLikes, repositoryComments, repositoryEmail, repositoryRabbitMQ, repositoryRedis, cache)
 	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")

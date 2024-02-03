@@ -7,6 +7,7 @@ import (
 
 	"github.com/Vainsberg/WebBlogCraft/internal/dto"
 	"github.com/Vainsberg/WebBlogCraft/internal/pkg"
+	"github.com/Vainsberg/WebBlogCraft/internal/rabbitmq"
 	"github.com/Vainsberg/WebBlogCraft/internal/redis"
 	"github.com/Vainsberg/WebBlogCraft/internal/repository"
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
@@ -22,6 +23,7 @@ type PostService struct {
 	LikesRepository    *repository.RepositoryLikes
 	CommentsRepository *repository.RepositoryComments
 	EmailRepository    *repository.RepositoryEmail
+	RabbitMQRepository *rabbitmq.RepositoryRabbitMQ
 	ClientRedis        *redis.RedisClient
 	Cache              *cache.Cache
 }
@@ -33,6 +35,7 @@ func NewPostService(logger *zap.Logger,
 	LikesRepository *repository.RepositoryLikes,
 	CommentsRepository *repository.RepositoryComments,
 	EmailRepository *repository.RepositoryEmail,
+	RabbitMQRepository *rabbitmq.RepositoryRabbitMQ,
 	ClientRedis *redis.RedisClient,
 	cache *cache.Cache) *PostService {
 	return &PostService{
@@ -43,6 +46,7 @@ func NewPostService(logger *zap.Logger,
 		LikesRepository:    LikesRepository,
 		CommentsRepository: CommentsRepository,
 		EmailRepository:    EmailRepository,
+		RabbitMQRepository: RabbitMQRepository,
 		ClientRedis:        ClientRedis,
 		Cache:              cache,
 	}
