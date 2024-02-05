@@ -1,7 +1,10 @@
 package rabbitmq
 
 import (
+	"bytes"
+	"fmt"
 	"log"
+	"net/http"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -33,7 +36,12 @@ func (rab *RepositoryRabbitMQ) ConsumeMessages(queueName string) {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			resp, err := http.Post("/verify-email/code", "application/json", bytes.NewReader(d.Body))
+			if err != nil {
+				fmt.Println("Ошибка при отправке POST-запроса:", err)
+				return
+			}
+			defer resp.Body.Close()
 		}
 	}()
 
@@ -41,7 +49,7 @@ func (rab *RepositoryRabbitMQ) ConsumeMessages(queueName string) {
 	<-forever
 }
 
-func (rab *RepositoryRabbitMQ) PublishMessage(queueName string, body string) error {
+func (rab *RepositoryRabbitMQ) PublishMessage(queueName string, body []byte) error {
 	_, err := rab.ch.QueueDeclare(
 		queueName,
 		false,

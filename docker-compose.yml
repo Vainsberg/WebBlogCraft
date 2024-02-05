@@ -16,3 +16,11 @@ services:
       - REDIS_PASSWORD=
       - REDIS_PORT=6379
       - REDIS_DATABASES=2
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+

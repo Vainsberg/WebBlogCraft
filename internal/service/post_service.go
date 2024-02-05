@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"html/template"
 	"io/ioutil"
 	"strconv"
@@ -317,4 +318,28 @@ func (post *PostService) AddCodeToRedis(code int) dto.EmailCode {
 	}
 
 	return searchCode
+}
+
+func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) {
+
+	post.AddEmailInDB(cookie, email)
+
+	code := pkg.GenerateSixDigitCode()
+	searchCode := post.AddCodeToRedis(code)
+
+	message := response.RabbitMQMessage{
+		Code:  searchCode.Code,
+		Email: email,
+	}
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		post.Logger.Error("Error marshalling message:", zap.Error(err))
+	}
+
+	post.RabbitMQRepository.PublishMessage(email, messageBytes)
+
+	go func() {
+		post.RabbitMQRepository.ConsumeMessages(email)
+	}()
 }
