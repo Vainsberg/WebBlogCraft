@@ -25,3 +25,24 @@ func (e *RepositoryEmail) AddEmailAndUserId(UsersId int, content string) error {
 	}
 	return nil
 }
+
+func (e *RepositoryEmail) SearchEmail(UsersId int) (string, error) {
+	var email string
+	row := e.db.QueryRow(`SELECT email FROM EmailVerifications WHERE Users_id = ?`, UsersId)
+	if err := row.Scan(&email); err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		fmt.Println(err)
+	}
+	return email, nil
+}
+
+func (e *RepositoryEmail) UpdateEmailVerificationStatus(email string) error {
+	_, err := e.db.Exec("UPDATE EmailVerifications SET is_email_verified = ? WHERE email = ?", true, email)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}

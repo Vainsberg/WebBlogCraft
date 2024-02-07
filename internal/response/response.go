@@ -41,6 +41,6 @@ type CommentResponse struct {
 }
 
 type RabbitMQMessage struct {
-	Code  string
+	Code  int
 	Email string
 }

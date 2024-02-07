@@ -291,44 +291,30 @@ func (post *PostService) LikeActionToComment(cookie, commentIDStr string) (int, 
 }
 
 func (post *PostService) AddEmailInDB(cookie, email string) {
-
 	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
 	if err != nil {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
-	post.EmailRepository.AddEmailAndUserId(userID, cookie)
+	post.EmailRepository.AddEmailAndUserId(userID, email)
 }
 
-func (post *PostService) AddCodeToRedis(code int) dto.EmailCode {
-	cachekey := "email"
+func (post *PostService) AddCodeToRedis(code int, email string) {
+	cachekey := email
 
-	searchCode, err := post.ClientRedis.GetRedisCode(cachekey)
-	if err == nil {
-		return searchCode
-	}
-
-	err = post.ClientRedis.AddToCacheCode(code, cachekey)
+	err := post.ClientRedis.AddToCacheCode(code, cachekey)
 	if err != nil {
 		post.Logger.Error("AddToCache error: ", zap.Error(err))
 	}
-
-	searchCode, err = post.ClientRedis.GetRedisCode(cachekey)
-	if err != nil {
-		post.Logger.Error("GetRedisValue error: ", zap.Error(err))
-	}
-
-	return searchCode
 }
 
 func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) {
-
 	post.AddEmailInDB(cookie, email)
 
 	code := pkg.GenerateSixDigitCode()
-	searchCode := post.AddCodeToRedis(code)
+	post.AddCodeToRedis(code, email)
 
 	message := response.RabbitMQMessage{
-		Code:  searchCode.Code,
+		Code:  code,
 		Email: email,
 	}
 
@@ -342,4 +328,41 @@ func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) {
 	go func() {
 		post.RabbitMQRepository.ConsumeMessages(email)
 	}()
+}
+
+func (post *PostService) SearchEmailAdr(cookie string) string {
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	email, err := post.EmailRepository.SearchEmail(userID)
+	if err != nil {
+		post.Logger.Error("SearchEmail error:", zap.Error(err))
+	}
+	return email
+}
+
+func (post *PostService) GetCodeToRedis(email string) string {
+
+	searchCode, err := post.ClientRedis.GetRedisCode(email)
+	if err != nil {
+		post.Logger.Error("GetRedisCode error:", zap.Error(err))
+	}
+
+	code := strconv.Itoa(searchCode.Code)
+
+	return code
+}
+
+func (post *PostService) ProcessVerifiedEmail(email string) {
+	err := post.ClientRedis.ClearRedisCode(email)
+	if err != nil {
+		post.Logger.Error("ClearRedisCode error:", zap.Error(err))
+	}
+
+	err = post.EmailRepository.UpdateEmailVerificationStatus(email)
+	if err != nil {
+		post.Logger.Error("AddTrueEmail error:", zap.Error(err))
+	}
 }

@@ -1,12 +1,13 @@
 package rabbitmq
 
 import (
-	"bytes"
-	"fmt"
+	"encoding/json"
 	"log"
-	"net/http"
+	"strconv"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/response"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"gopkg.in/gomail.v2"
 )
 
 type RepositoryRabbitMQ struct {
@@ -19,6 +20,7 @@ func NewRepositoryRabbitMQ(ch *amqp.Channel, conn *amqp.Connection) *RepositoryR
 }
 
 func (rab *RepositoryRabbitMQ) ConsumeMessages(queueName string) {
+	var message response.RabbitMQMessage
 	msgs, err := rab.ch.Consume(
 		queueName,
 		"",
@@ -36,12 +38,22 @@ func (rab *RepositoryRabbitMQ) ConsumeMessages(queueName string) {
 
 	go func() {
 		for d := range msgs {
-			resp, err := http.Post("/verify-email/code", "application/json", bytes.NewReader(d.Body))
+			err := json.Unmarshal(d.Body, &message)
 			if err != nil {
-				fmt.Println("Ошибка при отправке POST-запроса:", err)
 				return
 			}
-			defer resp.Body.Close()
+			code := strconv.Itoa(message.Code)
+
+			m := gomail.NewMessage()
+			m.SetHeader("From", "content.blog@mail.ru")
+			m.SetHeader("To", message.Email)
+			m.SetHeader("Subject", "Your code")
+			m.SetBody("text/html", "Code <b>"+code+"</b>")
+			d := gomail.NewDialer("smtp.mail.ru", 465, "content.blog@mail.ru", "1Y4f8WfSmxZzb0XPmFQ5")
+
+			if err := d.DialAndSend(m); err != nil {
+				panic(err)
+			}
 		}
 	}()
 

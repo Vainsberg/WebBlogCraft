@@ -16,5 +16,5 @@ type PostDto struct {
 }
 
 type EmailCode struct {
-	Code string
+	Code int
 }

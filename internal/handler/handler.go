@@ -79,6 +79,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	h.Logger.Info("GET request to PostsHandler")
 
 	postsLastTen, err := h.PostService.PostsRepository.GetLastTenPosts()
@@ -100,7 +101,6 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
 	}
-
 }
 
 func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +221,6 @@ func (h *Handler) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, h.AuthService.DeleteSessionCookie())
 
 	fmt.Fprint(w, h.PostService.HtmlContent("html/signout.html"))
-
 }
 
 func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -310,22 +309,30 @@ func (h *Handler) EmailVerificationsHandler(w http.ResponseWriter, r *http.Reque
 		email := r.FormValue("email")
 
 		h.PostService.PublishCodeToRabbitMQ(c.Value, email)
+		http.Redirect(w, r, "/verify-email/code", http.StatusSeeOther)
+		return
 	}
-
 	fmt.Fprint(w, h.PostService.HtmlContent("html/email_verification.html"))
 }
 
 func (h *Handler) EmailCodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-
 		c, err := r.Cookie("session_token")
 		if errors.Is(err, http.ErrNoCookie) {
 			return
 		}
-		email := r.FormValue("email")
+		code := r.FormValue("code")
 
-		h.PostService.PublishCodeToRabbitMQ(c.Value, email)
+		email := h.PostService.SearchEmailAdr(c.Value)
+		SearchCode := h.PostService.GetCodeToRedis(email)
+
+		if code != SearchCode {
+			fmt.Fprint(w, h.PostService.HtmlContent("html/email_code_wrong.html"))
+			return
+		}
+		h.PostService.ProcessVerifiedEmail(email)
+		fmt.Fprint(w, h.PostService.HtmlContent("html/email_verif.html"))
+		return
 	}
-
-	fmt.Fprint(w, h.PostService.HtmlContent("html/email_verification.html"))
+	fmt.Fprint(w, h.PostService.HtmlContent("html/email_code.html"))
 }

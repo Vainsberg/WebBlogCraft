@@ -9,34 +9,46 @@
     <link rel="stylesheet" href="/static/css/style_head.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="/">BLOG Content</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ml-auto">
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Пользователь
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/signout">Выйти</a></li>
-                    <li><a class="dropdown-item" href="/verify-email">Подтвердить почту</a></li>
-                </ul>
-              </li>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">BLOG Content</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Пользователь
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/signout">Выйти</a></li>
+              <li><a class="dropdown-item" href="/verify-email">Подтвердить почту</a></li>
             </ul>
-          </div>
-        </div>
-      </nav>
+          </li>
+        </ul>
+        <br>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Посты 
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/posts/list?page=1">Просмотр постов</a></li>
+              <li><a class="dropdown-item" href="/posts/add">Создать пост</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
     <br>
     <center>
         <h3>Подтверждение почты</h3>
     </center>
     <br>
     <center>
-    <form action="/verify-email" method="post">
+    <form action="/verify-email/code" method="post">
      <label for="username">Введите код</label>
      <br>
      <input type="code" id="code" name="code" required>
