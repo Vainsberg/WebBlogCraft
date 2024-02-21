@@ -277,6 +277,7 @@ func (post *PostService) LikeActionToComment(cookie, commentIDStr string) (int, 
 		if err != nil {
 			post.Logger.Error("AddLikesToComments error:", zap.Error(err))
 		}
+
 	} else {
 		err = post.CommentsRepository.RemoveLikeFromComments(userID, commentID)
 		if err != nil {
@@ -344,15 +345,12 @@ func (post *PostService) SearchEmailAdr(cookie string) string {
 }
 
 func (post *PostService) GetCodeToRedis(email string) string {
-
 	searchCode, err := post.ClientRedis.GetRedisCode(email)
 	if err != nil {
 		post.Logger.Error("GetRedisCode error:", zap.Error(err))
 	}
 
-	code := strconv.Itoa(searchCode.Code)
-
-	return code
+	return searchCode
 }
 
 func (post *PostService) ProcessVerifiedEmail(email string) {
@@ -365,4 +363,30 @@ func (post *PostService) ProcessVerifiedEmail(email string) {
 	if err != nil {
 		post.Logger.Error("AddTrueEmail error:", zap.Error(err))
 	}
+}
+
+func (post *PostService) SearchVerifEmail(cookie string) bool {
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	verifEmail, err := post.EmailRepository.SearchBooleonVerif(userID)
+	if err != nil {
+		post.Logger.Error("SearchBooleonVerif error:", zap.Error(err))
+	}
+	return verifEmail
+}
+
+func (post *PostService) searchEmail(cookie string) bool {
+	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
+	if err != nil {
+		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
+	}
+
+	emailVerif, err := post.EmailRepository.SearchBooleonVerif(userID)
+	if err != nil {
+		post.Logger.Error("emailVerif error:", zap.Error(err))
+	}
+	return emailVerif
 }

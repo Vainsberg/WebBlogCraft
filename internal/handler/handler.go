@@ -30,9 +30,13 @@ func NewHandler(logger *zap.Logger, PostService *service.PostService, AuthServic
 
 func (h *Handler) MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("Main page accessed")
-	_, err := r.Cookie("session_token")
+	c, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_authorization.html"))
+		return
+	}
+	if !h.PostService.SearchVerifEmail(c.Value) {
+		fmt.Fprint(w, h.PostService.HtmlContent("html/main_page_no_verif_email.html"))
 		return
 	}
 	fmt.Fprint(w, h.PostService.HtmlContent("html/main_page.html"))
@@ -72,6 +76,15 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 		}
 
+		if !h.PostService.SearchVerifEmail(c.Value) {
+			tmpl := h.PostService.ParseHtml("html/no_verif_email.html", "blog")
+			err = tmpl.Execute(w, postsLastTen)
+			if err != nil {
+				h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+			}
+			return
+		}
+
 		tmpl := h.PostService.ParseHtml("html/blog.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
 		if err != nil {
@@ -87,13 +100,21 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
 
-	_, err = r.Cookie("session_token")
+	c, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		tmpl := h.PostService.ParseHtml("html/blog_no_authorization.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
 		if err != nil {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
+
+	} else if !h.PostService.SearchVerifEmail(c.Value) {
+		tmpl := h.PostService.ParseHtml("html/blog_no_verif_email.html", "blog")
+		err = tmpl.Execute(w, postsLastTen)
+		if err != nil {
+			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
+		}
+
 	} else {
 		tmpl := h.PostService.ParseHtml("html/blog.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
