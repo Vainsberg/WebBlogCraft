@@ -100,7 +100,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Error("GetLastTenPosts error: ", zap.Error(err))
 	}
 
-	c, err := r.Cookie("session_token")
+	cookie, err := r.Cookie("session_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		tmpl := h.PostService.ParseHtml("html/blog_no_authorization.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
@@ -108,7 +108,7 @@ func (h *Handler) PostsHandler(w http.ResponseWriter, r *http.Request) {
 			h.Logger.Error("tmpl.Execute error:", zap.Error(err))
 		}
 
-	} else if !h.PostService.SearchVerifEmail(c.Value) {
+	} else if !h.PostService.SearchVerifEmail(cookie.Value) {
 		tmpl := h.PostService.ParseHtml("html/blog_no_verif_email.html", "blog")
 		err = tmpl.Execute(w, postsLastTen)
 		if err != nil {
@@ -323,13 +323,13 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) EmailVerificationsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		c, err := r.Cookie("session_token")
+		cookie, err := r.Cookie("session_token")
 		if errors.Is(err, http.ErrNoCookie) {
 			return
 		}
 		email := r.FormValue("email")
 
-		h.PostService.PublishCodeToRabbitMQ(c.Value, email)
+		h.PostService.PublishCodeToRabbitMQ(cookie.Value, email)
 		http.Redirect(w, r, "/verify-email/code", http.StatusSeeOther)
 		return
 	}

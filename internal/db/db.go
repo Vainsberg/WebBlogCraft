@@ -101,7 +101,7 @@ func CreateOB(cfg *config.Сonfigurations) *sql.DB {
 		Id INT AUTO_INCREMENT PRIMARY KEY,
 		Users_id INT,
 		email VARCHAR(255),
-		is_email_verified BOOLEAN NOT NULL,
+		is_email_verified BOOLEAN DEFAULT FALSE,
 		FOREIGN KEY (Users_id) REFERENCES Users(id)
 	);
 `)

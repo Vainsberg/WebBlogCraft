@@ -371,7 +371,7 @@ func (post *PostService) SearchVerifEmail(cookie string) bool {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
 
-	verifEmail, err := post.EmailRepository.SearchBooleonVerif(userID)
+	verifEmail, err := post.EmailRepository.IsEmailVerified(userID)
 	if err != nil {
 		post.Logger.Error("SearchBooleonVerif error:", zap.Error(err))
 	}
@@ -384,7 +384,7 @@ func (post *PostService) searchEmail(cookie string) bool {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
 
-	emailVerif, err := post.EmailRepository.SearchBooleonVerif(userID)
+	emailVerif, err := post.EmailRepository.IsEmailVerified(userID)
 	if err != nil {
 		post.Logger.Error("emailVerif error:", zap.Error(err))
 	}

@@ -47,7 +47,7 @@ func (e *RepositoryEmail) UpdateEmailVerificationStatus(email string) error {
 	return nil
 }
 
-func (e *RepositoryEmail) SearchBooleonVerif(userID int) (bool, error) {
+func (e *RepositoryEmail) IsEmailVerified(userID int) (bool, error) {
 	var verif bool
 	row := e.db.QueryRow("SELECT is_email_verified FROM EmailVerifications WHERE Users_id = ?", userID)
 	if err := row.Scan(&verif); err != nil {
