@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOG Content</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style_head.css">
+    <link rel="stylesheet" href="/static/css/style_posts.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">BLOG Content</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Пользователь
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/signout">Выйти</a></li>
+              <li><a class="dropdown-item" href="/verify-email">Подтвердить почту</a></li>
+            </ul>
+          </li>
+        </ul>
+        <br>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Посты 
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/posts/list?page=1">Просмотр постов</a></li>
+              <li><a class="dropdown-item" href="/posts/add">Создать пост</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+    <br>
+    <center>
+      <h3>Лента постов:</h3>
+      <div class="posts-container">
+        {{if .Posts}}
+          {{range .Posts}}
+            <div class="post">
+              <div class="post-header">
+                <strong>{{ .UserName }}</strong> 
+              </div>
+              <div class="post-body">
+                {{ .Content }}
+              </div>
+              <div class="post-footer">
+                <a href="#" class="like-button" post-id="{{ .PostId }}">Лайк</a>
+                <span class="likes-count" id="likes-count-{{ .PostId }}">{{ .Likes }}</span>
+              </div>
+              <p>Комментарии</p>
+              {{$postId := .PostId}}
+              <div class="comments-container" id="comments-container-{{ $postId }}"></div>
+              {{if .Comments}}
+                {{range .Comments}}
+                  <div class="comment-count-{{ $postId }}" id="comment-count-{{ $postId }}">
+                    <strong>{{ .UserName }}</strong>: {{ .Comment }}
+                
+                    <a href="#" class="like-button-comment" comment-id="{{ .CommentId }}">Лайк</a>
+                    <span class="likes-count-comment" id="likes-count-comment-{{ .CommentId }}">{{ .Likes }}</span>
+                  </div>
+                {{end}}
+              {{else}}
+                <p>Нет комментариев.</p>
+              {{end}}
+              <form>
+                <label for="comment-{{ .PostId }}">Введите комментарий </label>
+                <br>
+                <input type="comment" id="comment-{{ .PostId }}" name="comment" required>
+                <br>
+                <a href="#" class="create-comment" post-id="{{ .PostId }}">Отправить</a> 
+              </form>
+            </div>
+          {{end}}
+        {{else}}
+          <p>Нет доступных постов.</p>
+        {{end}}
+      </div>      
+      <script src="/static/js/like_post.js"></script>
+      <script src="/static/js/create_comment.js"></script>
+      <script src="/static/js/like_comment.js"></script>
+  <ul>
+      <li>
+          {{range .Pagination.TotalPages}}
+              {{if eq $.Pagination.CurrentPage .}}
+                  <span>{{.}}</span> 
+              {{else}}
+                  <a href="/posts/list?page={{.}}">{{.}}</a>
+              {{end}}
+          {{end}}
+      </li> 
+  </ul>   
+  </center>  
+</body>
+</html>

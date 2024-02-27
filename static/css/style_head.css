@@ -1,0 +1,42 @@
+.navbar {
+    background-color: #be9b5f;
+  }
+
+  .navbar-brand {
+      color: #ffffffff;
+      font-weight: bold; 
+  }
+
+  .navbar-toggler-icon {
+      background-color: #ffffff; 
+  }
+
+  .nav-item {
+      margin-right: 15px; 
+  }
+
+  .nav-link {
+      color: #fff; 
+      font-weight: bold; 
+  }
+
+  .dropdown-menu {
+      background-color: #be9b5f;
+  }
+
+  .dropdown-item {
+      color: #fff;
+  }
+
+ 
+  .description {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+  }
+
+  .description p {
+      font-size: 18px;
+      color: #333;
+  }

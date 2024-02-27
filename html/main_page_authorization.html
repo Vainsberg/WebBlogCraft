@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOG Content</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style_head.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">BLOG Content</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Пользователь
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/signin">Авторизация</a></li>
+              <li><a class="dropdown-item" href="/signup">Регистрация</a></li>
+            </ul>
+          </li>
+        </ul>
+        <br>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Посты 
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/posts/list?page=1">Просмотр постов</a></li>
+              <li><a class="dropdown-item" href="/posts/add">Создать пост</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="row">
+      <div class="col-lg-6 offset-lg-3">
+        <div class="description">
+          <p>
+            Добро пожаловать на наш уютный виртуальный уголок, где каждый пост — это история, написанная эмоциями. Мы рады приветствовать вас в мире, где слова танцуют на страницах, создавая мозаичный калейдоскоп уникальных историй.
+            Наши посты — это не просто тексты, а переливающиеся красками картины, в которых каждое слово — это кисть, прикосновение к душе читателя. Мы стремимся создать атмосферу, где каждый пост становится путеводителем в мир фантазии, вдохновляя вас на новые мысли и переживания.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
