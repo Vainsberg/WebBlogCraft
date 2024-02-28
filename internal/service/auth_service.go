@@ -32,7 +32,10 @@ func NewAuthService(logger *zap.Logger,
 func (auth *AuthService) CreateSessionCookie(userName string) *http.Cookie {
 	sessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(24 * time.Hour)
-	auth.SessionsRepository.AddSessionCookie(sessionToken, userName, expiresAt)
+	err := auth.SessionsRepository.AddSessionCookie(sessionToken, userName, expiresAt)
+	if err != nil {
+		auth.Logger.Error("Error AddSessionCookie:", zap.Error(err))
+	}
 
 	return &http.Cookie{
 		Name:    "session_token",
@@ -41,12 +44,17 @@ func (auth *AuthService) CreateSessionCookie(userName string) *http.Cookie {
 	}
 }
 
-func (auth *AuthService) AddUserWithHashedPassword(userName, userPassword string) {
+func (auth *AuthService) AddUserWithHashedPassword(userName, userPassword string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), 8)
 	if err != nil {
 		auth.Logger.Error("Error GenerateFromPassword:", zap.Error(err))
 	}
-	auth.UsersRepository.AddPasswordAndUserName(userName, string(hashedPassword))
+
+	err = auth.UsersRepository.AddPasswordAndUserName(userName, string(hashedPassword))
+	if err != nil {
+		auth.Logger.Error("Error AddPasswordAndUserName:", zap.Error(err))
+	}
+	return nil
 }
 
 func (auth *AuthService) SearchPassword(userName string) string {

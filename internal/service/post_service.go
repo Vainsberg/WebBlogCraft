@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 	"html/template"
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/dto"
@@ -54,7 +54,7 @@ func NewPostService(logger *zap.Logger,
 }
 
 func (post *PostService) HtmlContent(htmltext string) string {
-	htmlContent, err := ioutil.ReadFile(htmltext)
+	htmlContent, err := os.ReadFile(htmltext)
 	if err != nil {
 		post.Logger.Error("Ошибка чтения HTML-файла", zap.Error(err))
 		return ""
@@ -222,7 +222,11 @@ func (post *PostService) AddUserCommentToPostAndSearchUserName(cookie, postIDStr
 	if err != nil {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
-	post.CommentsRepository.AddCommentToPost(comment, userID, postID)
+
+	err = post.CommentsRepository.AddCommentToPost(comment, userID, postID)
+	if err != nil {
+		post.Logger.Error("AddCommentToPost error:", zap.Error(err))
+	}
 
 	userName, err := post.UsersRepository.SearchUserName(userID)
 	if err != nil {
@@ -296,7 +300,11 @@ func (post *PostService) AddEmailInDB(cookie, email string) {
 	if err != nil {
 		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
 	}
-	post.EmailRepository.AddEmailAndUserId(userID, email)
+
+	err = post.EmailRepository.AddEmailAndUserId(userID, email)
+	if err != nil {
+		post.Logger.Error("AddEmailAndUserId error:", zap.Error(err))
+	}
 }
 
 func (post *PostService) AddCodeToRedis(code int, email string) {
@@ -308,7 +316,7 @@ func (post *PostService) AddCodeToRedis(code int, email string) {
 	}
 }
 
-func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) {
+func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) error {
 	post.AddEmailInDB(cookie, email)
 
 	code := pkg.GenerateSixDigitCode()
@@ -324,11 +332,15 @@ func (post *PostService) PublishCodeToRabbitMQ(cookie, email string) {
 		post.Logger.Error("Error marshalling message:", zap.Error(err))
 	}
 
-	post.RabbitMQRepository.PublishMessage(email, messageBytes)
+	err = post.RabbitMQRepository.PublishMessage(email, messageBytes)
+	if err != nil {
+		post.Logger.Error("Error PublishMessage:", zap.Error(err))
+	}
 
 	go func() {
 		post.RabbitMQRepository.ConsumeMessages(email)
 	}()
+	return nil
 }
 
 func (post *PostService) SearchEmailAdr(cookie string) string {
@@ -376,17 +388,4 @@ func (post *PostService) SearchVerifEmail(cookie string) bool {
 		post.Logger.Error("SearchBooleonVerif error:", zap.Error(err))
 	}
 	return verifEmail
-}
-
-func (post *PostService) searchEmail(cookie string) bool {
-	userID, err := post.SessionsRepository.SearchUsersIdSessionCookie(cookie)
-	if err != nil {
-		post.Logger.Error("SearchUsersIdSessionCookie error:", zap.Error(err))
-	}
-
-	emailVerif, err := post.EmailRepository.IsEmailVerified(userID)
-	if err != nil {
-		post.Logger.Error("emailVerif error:", zap.Error(err))
-	}
-	return emailVerif
 }

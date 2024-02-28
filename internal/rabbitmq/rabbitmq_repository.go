@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strconv"
@@ -75,7 +76,9 @@ func (rab *RepositoryRabbitMQ) PublishMessage(queueName string, body []byte) err
 		return err
 	}
 
-	err = rab.ch.Publish(
+	ctx := context.Background()
+	err = rab.ch.PublishWithContext(
+		ctx,
 		"",
 		queueName,
 		false,
@@ -85,6 +88,7 @@ func (rab *RepositoryRabbitMQ) PublishMessage(queueName string, body []byte) err
 			Body:        []byte(body),
 		},
 	)
+
 	if err != nil {
 		log.Fatalf("Failed to publish a message: %s", err)
 		return err

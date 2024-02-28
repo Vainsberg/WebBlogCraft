@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/Vainsberg/WebBlogCraft/internal/response"
@@ -132,7 +132,11 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		searchName := h.AuthService.CheckUserExistence(userName)
 
 		if searchName != userName {
-			h.AuthService.AddUserWithHashedPassword(userName, userPassword)
+			err := h.AuthService.AddUserWithHashedPassword(userName, userPassword)
+			if err != nil {
+				h.Logger.Error("AddUserWithHashedPassword error:", zap.Error(err))
+			}
+
 			fmt.Fprint(w, h.PostService.HtmlContent("html/registration_confirmation_page.html"))
 			return
 		}
@@ -161,7 +165,10 @@ func (h *Handler) SigninHandler(w http.ResponseWriter, r *http.Request) {
 
 		http.SetCookie(w, h.AuthService.CreateSessionCookie(userName))
 
-		h.PostService.SessionsRepository.DeleteExpiredSessions()
+		err = h.PostService.SessionsRepository.DeleteExpiredSessions()
+		if err != nil {
+			h.Logger.Error("DeleteExpiredSessions error:", zap.Error(err))
+		}
 
 		fmt.Fprint(w, h.PostService.HtmlContent("html/authorization.html"))
 		return
@@ -229,7 +236,11 @@ func (h *Handler) AddLikeToPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponseLikes)
+	_, err = w.Write(jsonResponseLikes)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) SignOutHandler(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +248,10 @@ func (h *Handler) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, http.ErrNoCookie) {
 		return
 	}
-	h.PostService.SessionsRepository.DeleteSessionCookieAccount(cookie.Value)
+	err = h.PostService.SessionsRepository.DeleteSessionCookieAccount(cookie.Value)
+	if err != nil {
+		h.Logger.Error("DeleteSessionCookieAccount error:", zap.Error(err))
+	}
 
 	http.SetCookie(w, h.AuthService.DeleteSessionCookie())
 
@@ -256,7 +270,7 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	postIdStr := vars["postId"]
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
@@ -289,7 +303,11 @@ func (h *Handler) AddCommentToPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -305,6 +323,9 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 	commentIdStr := vars["commentId"]
 
 	updatedLikesCount, err := h.PostService.LikeActionToComment(cookie.Value, commentIdStr)
+	if err != nil {
+		h.Logger.Error("LikeActionToComment error:", zap.Error(err))
+	}
 
 	responseNewLikes := response.LikeResponse{
 		NewLikesCount: updatedLikesCount,
@@ -318,7 +339,11 @@ func (h *Handler) LikeToCommentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponseLikes)
+	_, err = w.Write(jsonResponseLikes)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) EmailVerificationsHandler(w http.ResponseWriter, r *http.Request) {
@@ -329,7 +354,11 @@ func (h *Handler) EmailVerificationsHandler(w http.ResponseWriter, r *http.Reque
 		}
 		email := r.FormValue("email")
 
-		h.PostService.PublishCodeToRabbitMQ(cookie.Value, email)
+		err = h.PostService.PublishCodeToRabbitMQ(cookie.Value, email)
+		if err != nil {
+			h.Logger.Error("PublishCodeToRabbitMQ error:", zap.Error(err))
+		}
+
 		http.Redirect(w, r, "/verify-email/code", http.StatusSeeOther)
 		return
 	}

@@ -27,6 +27,6 @@ func CreatePageList(countInt, page int) response.PageData {
 }
 
 func GenerateSixDigitCode() int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(900000) + 100000
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return random.Intn(900000) + 100000
 }

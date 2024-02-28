@@ -12,8 +12,8 @@ type Сonfigurations struct {
 	DbPort       string `yaml:"DbPort" env:"DbPort" env-default:"3306"`
 	RedisAddr    string `yaml:"RedisAddr" env:"RedisAddr" env-default:"localhost:6379"`
 	RedisPass    string `yaml:"RedisPass" env:"RedisPass" env-default:""`
-	RedisDb      int    `yaml:"RedisDb" env:"RedisDb" env-default: "0"`
-	RABBITMQ_URL string `yaml:"rabbitMQURL" env:"rabbitMQURL" env-default: ""`
+	RedisDb      int    `yaml:"RedisDb" env:"RedisDb" env-default:"0"`
+	RABBITMQ_URL string `yaml:"rabbitMQURL" env:"rabbitMQURL" env-default:""`
 }
 
 func NewConfig() (*Сonfigurations, error) {
