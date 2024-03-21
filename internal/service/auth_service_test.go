@@ -11,7 +11,7 @@ func TestAddUserWithHashedPassword(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	usersRepo := new(MockRepositoryUsers)
 
-	authService := NewAuthService(logger, usersRepo, nil, nil)
+	authService := NewAuthService(logger, usersRepo, nil, nil, nil)
 
 	usersRepo.On("AddPasswordAndUserName", "testuser", "testpassword").Return(nil)
 
@@ -23,7 +23,7 @@ func TestAddUserWithHashedPassword(t *testing.T) {
 
 func TestDeleteSessionCookie(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	authService := NewAuthService(logger, nil, nil, nil)
+	authService := NewAuthService(logger, nil, nil, nil, nil)
 
 	cookie := authService.DeleteSessionCookie()
 	assert.Equal(t, "session_token", cookie.Name)

@@ -6,7 +6,7 @@ type MockRepositoryUsers struct {
 	mock.Mock
 }
 
-func (m *MockRepositoryUsers) AddPasswordAndUserName(userName, userPassword string) error {
+func (m *MockRepositoryUsers) AddUserWithHashedPassword(userName, userPassword string) error {
 	args := m.Called(userName, userPassword)
 	return args.Error(0)
 }

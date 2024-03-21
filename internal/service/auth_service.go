@@ -12,17 +12,20 @@ import (
 
 type AuthService struct {
 	Logger             *zap.Logger
+	UserRepository     repository.UserRepository
 	UsersRepository    *repository.RepositoryUsers
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 }
 
 func NewAuthService(logger *zap.Logger,
+	UserRepository repository.UserRepository,
 	UsersRepository *repository.RepositoryUsers,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts) *AuthService {
 	return &AuthService{
 		Logger:             logger,
+		UserRepository:     UserRepository,
 		UsersRepository:    UsersRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
