@@ -55,7 +55,7 @@ func main() {
 	repositoryRedis := redis.NewRepositoryRedis(redisClient)
 	repositoryRabbitMQ := rabbitmq.NewRepositoryRabbitMQ(ch, conn)
 	PostService := service.NewPostService(logger, repositoryUsers, repositorySessions, repositoryPosts, repositoryLikes, repositoryComments, repositoryEmail, repositoryRabbitMQ, repositoryRedis, cache)
-	AuthService := service.NewAuthService(logger, nil, repositoryUsers, repositorySessions, repositoryPosts)
+	AuthService := service.NewAuthService(logger, repositoryUsers, repositorySessions, repositoryPosts)
 	handler := handler.NewHandler(logger, PostService, AuthService)
 	router.HandleFunc("/", handler.MainPageHandler).Methods("GET")
 	router.HandleFunc("/posts/add", handler.PostsHandler).Methods("GET", "POST")

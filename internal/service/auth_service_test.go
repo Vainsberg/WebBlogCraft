@@ -4,14 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestAddUserWithHashedPassword(t *testing.T) {
-	logger := zaptest.NewLogger(t)
 	usersRepo := new(MockRepositoryUsers)
 
-	authService := NewAuthService(logger, usersRepo, nil, nil, nil)
+	authService := NewAuthService(nil, usersRepo, nil, nil)
 
 	usersRepo.On("AddPasswordAndUserName", "testuser", "testpassword").Return(nil)
 
@@ -22,8 +20,7 @@ func TestAddUserWithHashedPassword(t *testing.T) {
 }
 
 func TestDeleteSessionCookie(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-	authService := NewAuthService(logger, nil, nil, nil, nil)
+	authService := NewAuthService(nil, nil, nil, nil)
 
 	cookie := authService.DeleteSessionCookie()
 	assert.Equal(t, "session_token", cookie.Name)

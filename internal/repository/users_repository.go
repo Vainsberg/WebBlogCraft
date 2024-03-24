@@ -7,10 +7,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type UserRepository interface {
-	AddUserWithHashedPassword(userName, userPassword string) error
-}
-
 type RepositoryUsers struct {
 	db *sql.DB
 }

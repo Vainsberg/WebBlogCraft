@@ -10,23 +10,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type AuthUserRepository interface {
+	AddPasswordAndUserName(userName, password string) error
+	SearchPasswordAndUserName(userName string) (string, error)
+	CheckingPresenceUser(username string) (string, error)
+	SearchUserName(UserID int) (string, error)
+}
+
 type AuthService struct {
 	Logger             *zap.Logger
-	UserRepository     repository.UserRepository
+	AuthUserRepository AuthUserRepository
 	UsersRepository    *repository.RepositoryUsers
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 }
 
 func NewAuthService(logger *zap.Logger,
-	UserRepository repository.UserRepository,
-	UsersRepository *repository.RepositoryUsers,
+	AuthUserRepository AuthUserRepository,
 	SessionsRepository *repository.RepositorySessions,
 	PostsRepository *repository.RepositoryPosts) *AuthService {
 	return &AuthService{
 		Logger:             logger,
-		UserRepository:     UserRepository,
-		UsersRepository:    UsersRepository,
+		AuthUserRepository: AuthUserRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
 	}
