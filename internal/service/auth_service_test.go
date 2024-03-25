@@ -3,11 +3,12 @@ package service
 import (
 	"testing"
 
+	"github.com/Vainsberg/WebBlogCraft/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAddUserWithHashedPassword(t *testing.T) {
-	usersRepo := new(MockRepositoryUsers)
+	usersRepo := new(mocks.MockRepositoryUsers)
 
 	authService := NewAuthService(nil, usersRepo, nil, nil)
 

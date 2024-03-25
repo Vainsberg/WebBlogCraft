@@ -16,11 +16,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type PostRepository interface {
+	AddContentAndUserId(UsersId int, content string) error
+	ContentOutput() (*response.Post, error)
+	CalculatePageOffset(offset int) ([]dto.PostDto, error)
+	CountPosts() (float64, error)
+	GetLastTenPosts() ([]dto.PostDto, error)
+}
+
 type PostService struct {
 	Logger             *zap.Logger
 	UsersRepository    *repository.RepositoryUsers
 	SessionsRepository *repository.RepositorySessions
-	PostsRepository    *repository.RepositoryPosts
+	PostsRepository    PostRepository
 	LikesRepository    *repository.RepositoryLikes
 	CommentsRepository *repository.RepositoryComments
 	EmailRepository    *repository.RepositoryEmail
@@ -32,7 +40,7 @@ type PostService struct {
 func NewPostService(logger *zap.Logger,
 	UsersRepository *repository.RepositoryUsers,
 	SessionsRepository *repository.RepositorySessions,
-	PostsRepository *repository.RepositoryPosts,
+	PostsRepository PostRepository,
 	LikesRepository *repository.RepositoryLikes,
 	CommentsRepository *repository.RepositoryComments,
 	EmailRepository *repository.RepositoryEmail,
@@ -104,7 +112,7 @@ func (post *PostService) AddContentToRedis() []dto.PostDto {
 	return searchContentRedis
 }
 
-func (post *PostService) SearchCountPage(page int) response.PageData {
+func (post *PostService) SearchCountPage(page int) (response.PageData, error) {
 	var count float64
 
 	sumPosts, err := post.PostsRepository.CountPosts()
@@ -115,11 +123,15 @@ func (post *PostService) SearchCountPage(page int) response.PageData {
 	countInt := pkg.FormatInt(count)
 
 	PageList := pkg.CreatePageList(countInt, page)
-	return PageList
+	return PageList, nil
 }
 
 func (post *PostService) GenerateTemplateDataPosts(page, offset int) response.ResponseData {
-	countPage := post.SearchCountPage(page)
+	countPage, err := post.SearchCountPage(page)
+	if err != nil {
+		post.Logger.Error("SearchCountPage error: ", zap.Error(err))
+
+	}
 	offsetPosts, err := post.PostsRepository.CalculatePageOffset(offset)
 	if err != nil {
 		post.Logger.Error("CalculatePageOffset error: ", zap.Error(err))
@@ -138,7 +150,10 @@ func (post *PostService) GenerateTemplateDataPosts(page, offset int) response.Re
 }
 
 func (post *PostService) GenerateTemplateDataPostsRedis(page int) response.ResponseData {
-	countPage := post.SearchCountPage(page)
+	countPage, err := post.SearchCountPage(page)
+	if err != nil {
+		post.Logger.Error("SearchCountPage error: ", zap.Error(err))
+	}
 	postsRedis := post.AddContentToRedis()
 
 	posts, err := post.GetPostsWithComments(postsRedis)

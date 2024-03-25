@@ -19,8 +19,7 @@ type AuthUserRepository interface {
 
 type AuthService struct {
 	Logger             *zap.Logger
-	AuthUserRepository AuthUserRepository
-	UsersRepository    *repository.RepositoryUsers
+	UsersRepository    AuthUserRepository
 	SessionsRepository *repository.RepositorySessions
 	PostsRepository    *repository.RepositoryPosts
 }
@@ -31,7 +30,7 @@ func NewAuthService(logger *zap.Logger,
 	PostsRepository *repository.RepositoryPosts) *AuthService {
 	return &AuthService{
 		Logger:             logger,
-		AuthUserRepository: AuthUserRepository,
+		UsersRepository:    AuthUserRepository,
 		SessionsRepository: SessionsRepository,
 		PostsRepository:    PostsRepository,
 	}
